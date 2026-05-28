@@ -1723,7 +1723,7 @@ h1 {
 
   <div class="footer-strip">
     <div class="drift-panel">
-      <div class="drift-title">accumulated drift from reality</div>
+      <div class="drift-title">clock health</div>
       <div class="drift-value" id="drift-value">measuring...</div>
       <div class="drift-rate" id="drift-rate"></div>
       <div class="drift-meta" id="drift-meta"></div>
@@ -1747,56 +1747,96 @@ h1 {
 
 <script>
 // ============================================================
-// FIRST PRINCIPLES CLOCK — PERSISTENT DRIFT EDITION
+// CLOCK TIME SOURCE
 // ============================================================
-// The system clock is touched ONCE IN HISTORY — the very first
-// time this page loads on this machine. That anchor is persisted
-// to localStorage. Every subsequent boot free-runs from the
-// stored anchor, accumulating real drift you can watch diverge.
+// PRIMARY: the device's own clock (Date.now()). The project has
+// outgrown its original "touch the system clock once and free-run"
+// purity — the eclipse maps, celestial nav solver, sky chart, etc.
+// are far more useful when wall-clock time matches what the rest
+// of the device thinks it is.
 //
-// The "drift from reality" display compares our free-running
-// clock against what the system clock says NOW — making the
-// philosophical point visceral: without periodic correction
-// from atomic clocks (NTP), local oscillators wander.
+// FALLBACK: if Date.now() ever returns garbage (NaN, pre-2000, or
+// absurdly far in the future), we extrapolate from the most recent
+// known-good anchor cached in localStorage plus a monotonic delta
+// from performance.now(). This is best-effort; we just keep going.
+// The cached anchor is refreshed every few seconds whenever the
+// system clock is healthy, so the fallback is never stale by much.
 // ============================================================
 
 const STORAGE_KEY = 'first-principles-clock';
 
-// --- BOOT LOGIC: persist or recover the anchor ---
-let ANCHOR_UNIX_MS, ANCHOR_PERF_MS, BOOT_MODE, FIRST_ANCHOR_TIME, SESSION_COUNT;
+// FIRST_ANCHOR_TIME / SESSION_COUNT are kept around purely for
+// the historical / diagnostic display. Nothing depends on them.
+let FIRST_ANCHOR_TIME, SESSION_COUNT;
 
-const stored = localStorage.getItem(STORAGE_KEY);
-if (stored) {
-  const state = JSON.parse(stored);
-  // We know the time at the LAST session's anchor, and how much
-  // monotonic time had elapsed in that session when it was saved.
-  // But we have NO idea how long the machine was off.
-  // So our "first principles" time is: original anchor + all
-  // monotonic time we've ever measured. The gap while off is LOST.
-  // This is the honest version: time we can't measure doesn't exist to us.
-  ANCHOR_UNIX_MS = state.anchorUnixMs;
-  ANCHOR_PERF_MS = performance.now() - state.elapsedAtSave;
-  FIRST_ANCHOR_TIME = state.firstAnchorTime;
-  SESSION_COUNT = state.sessionCount + 1;
-  BOOT_MODE = 'persisted';
-} else {
-  // First time ever — touch the system clock ONCE
-  ANCHOR_UNIX_MS = Date.now();
-  ANCHOR_PERF_MS = performance.now();
-  FIRST_ANCHOR_TIME = ANCHOR_UNIX_MS;
-  SESSION_COUNT = 1;
-  BOOT_MODE = 'fresh';
+// Fallback anchor — refreshed continuously while the system clock
+// is healthy, so we always have something recent to extrapolate from.
+let _fallbackAnchorUnixMs = 0;
+let _fallbackAnchorPerfMs = 0;
+let _timeSource = 'system';  // 'system' | 'fallback'
+
+function _systemNowMs() {
+  try {
+    const n = Date.now();
+    // sane = finite, post-2000, and not absurdly far in the future
+    if (Number.isFinite(n) && n > 9.46e11 && n < 4e15) return n;
+  } catch (_) {}
+  return null;
 }
 
-// Persist state periodically so we can survive page closes
+(function bootTimeSource() {
+  let stored = null;
+  try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (_) {}
+
+  const sysNow = _systemNowMs();
+  const perfNow = performance.now();
+
+  if (stored && Number.isFinite(stored.anchorUnixMs)) {
+    FIRST_ANCHOR_TIME = stored.firstAnchorTime ?? stored.anchorUnixMs;
+    SESSION_COUNT = (stored.sessionCount ?? 0) + 1;
+    _fallbackAnchorUnixMs = stored.anchorUnixMs;
+    _fallbackAnchorPerfMs = perfNow;
+  } else {
+    FIRST_ANCHOR_TIME = sysNow ?? 0;
+    SESSION_COUNT = 1;
+    _fallbackAnchorUnixMs = sysNow ?? 0;
+    _fallbackAnchorPerfMs = perfNow;
+  }
+
+  // If the system clock is healthy at boot, immediately overwrite the
+  // fallback anchor — last-known-good is now.
+  if (sysNow !== null) {
+    _fallbackAnchorUnixMs = sysNow;
+    _fallbackAnchorPerfMs = perfNow;
+  }
+})();
+
+function getNow() {
+  const sys = _systemNowMs();
+  if (sys !== null) {
+    // System clock is healthy. Refresh the fallback anchor every ~5s
+    // so we have a recent extrapolation point if the clock dies later.
+    if (performance.now() - _fallbackAnchorPerfMs > 5000) {
+      _fallbackAnchorUnixMs = sys;
+      _fallbackAnchorPerfMs = performance.now();
+    }
+    _timeSource = 'system';
+    return sys;
+  }
+  // Device clock is broken — extrapolate from the last good anchor.
+  _timeSource = 'fallback';
+  return _fallbackAnchorUnixMs + (performance.now() - _fallbackAnchorPerfMs);
+}
+
 function persistState() {
-  const elapsed = performance.now() - ANCHOR_PERF_MS;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    anchorUnixMs: ANCHOR_UNIX_MS,
-    elapsedAtSave: elapsed,
-    firstAnchorTime: FIRST_ANCHOR_TIME,
-    sessionCount: SESSION_COUNT
-  }));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      anchorUnixMs: _fallbackAnchorUnixMs,
+      anchorPerfMs: _fallbackAnchorPerfMs,
+      firstAnchorTime: FIRST_ANCHOR_TIME,
+      sessionCount: SESSION_COUNT
+    }));
+  } catch (_) {}  // localStorage may be unavailable in private browsing
 }
 setInterval(persistState, 1000);
 window.addEventListener('beforeunload', persistState);
@@ -1922,8 +1962,7 @@ function buildClockFace() {
 }
 
 function render() {
-  const elapsed = performance.now() - ANCHOR_PERF_MS;
-  const ourUnixMs = ANCHOR_UNIX_MS + elapsed;
+  const ourUnixMs = getNow();
   const localMs = ourUnixMs + TZ_OFFSET_MS;
 
   const t = unixMsToComponents(localMs);
@@ -1965,33 +2004,31 @@ function render() {
     `${t.day} ${MONTH_NAMES[t.month]} ${t.year}`;
   document.getElementById('day-name').textContent = DAY_NAMES[t.dayOfWeek];
 
-  // --- DRIFT: compare our free-running time against system reality ---
-  // This is the ONLY ongoing use of Date.now() — purely for display,
-  // never fed back into the clock. It's the "control group."
-  const realityMs = Date.now();
-  const driftMs = ourUnixMs - realityMs;
+  // --- CLOCK HEALTH ---
+  // Reflects which time source is currently active. In normal operation
+  // this stays green ("synced to device clock"). The fallback message
+  // only appears if Date.now() ever starts returning garbage.
   const driftEl = document.getElementById('drift-value');
-  driftEl.textContent = formatDrift(driftMs);
-  driftEl.className = 'drift-value' + (Math.abs(driftMs) < 50 ? ' synced' : '');
-
-  // Drift rate (how fast we're diverging per hour of runtime)
-  const runtimeHours = elapsed / 3600000;
-  if (runtimeHours > 0.001) {
-    const ppm = (driftMs / elapsed) * 1e6;
+  if (_timeSource === 'system') {
+    driftEl.textContent = '● synced to device clock';
+    driftEl.className = 'drift-value synced';
+    document.getElementById('drift-rate').textContent = '';
+  } else {
+    const ageMs = performance.now() - _fallbackAnchorPerfMs;
+    driftEl.textContent = '⚠ device clock unavailable — extrapolating';
+    driftEl.className = 'drift-value';
     document.getElementById('drift-rate').textContent =
-      `${ppm.toFixed(2)} ppm · ${(driftMs / runtimeHours).toFixed(1)} ms/hr`;
+      `last good anchor was ${formatDrift(ageMs)} ago`;
   }
 
-  // Time since the original anchor was set
-  const ageSinceFirstAnchor = realityMs - FIRST_ANCHOR_TIME;
+  const ageSinceFirstAnchor = ourUnixMs - FIRST_ANCHOR_TIME;
   const ageStr = ageSinceFirstAnchor < 60000 ? `${(ageSinceFirstAnchor/1000).toFixed(0)}s ago`
     : ageSinceFirstAnchor < 3600000 ? `${(ageSinceFirstAnchor/60000).toFixed(1)} min ago`
     : ageSinceFirstAnchor < 86400000 ? `${(ageSinceFirstAnchor/3600000).toFixed(1)} hrs ago`
     : `${(ageSinceFirstAnchor/86400000).toFixed(1)} days ago`;
 
   document.getElementById('drift-meta').textContent =
-    `original anchor set ${ageStr} · session ${SESSION_COUNT} · `
-    + (BOOT_MODE === 'fresh' ? 'system clock touched THIS boot' : 'running from stored anchor (no system clock)');
+    `first opened ${ageStr} · session ${SESSION_COUNT} · timezone ${tzName()}`;
 
   // Info panel — day% and year% at centisecond resolution
   const dayOfYear = totalDayOfYear(t.day, t.month, t.year);
@@ -2026,8 +2063,8 @@ function render() {
   }
 
   document.getElementById('info-panel').innerHTML = `
-    <span class="label">our unix epoch</span><span class="value">${Math.floor(ourUnixMs / 1000)}</span>
-    <span class="label">monotonic Δ</span><span class="value">${(elapsed / 1000).toFixed(3)}s</span>
+    <span class="label">unix epoch</span><span class="value">${Math.floor(ourUnixMs / 1000)}</span>
+    <span class="label">page uptime</span><span class="value">${(performance.now() / 1000).toFixed(3)}s</span>
     <span class="label">timezone</span><span class="value">${tzName()}</span>
     <span class="label">leap year</span><span class="value">${isLeapYear(t.year) ? 'yes' : 'no'}</span>
     <span class="label">day of year</span><span class="value">${dayOfYear} / ${daysInYear(t.year)}</span>
@@ -2038,16 +2075,18 @@ function render() {
   `;
 
   const bootModeEl = document.getElementById('boot-mode');
-  if (BOOT_MODE === 'fresh') {
+  if (_timeSource === 'system') {
     bootModeEl.className = 'boot-mode fresh';
-    bootModeEl.textContent = '● first boot — system clock anchor captured';
+    bootModeEl.textContent = '● live time from device clock';
   } else {
     bootModeEl.className = 'boot-mode persisted';
-    bootModeEl.textContent = `● session ${SESSION_COUNT} — free-running from stored anchor (time gap while off is lost forever)`;
+    bootModeEl.textContent = '● fallback mode — device clock unavailable, extrapolating from last-known-good anchor';
   }
 
   document.getElementById('epoch-bar-text').textContent =
-    `anchor: unix ${ANCHOR_UNIX_MS} · system clock touched once in history · drift is real`;
+    _timeSource === 'system'
+      ? `time source: device clock · cached anchor refreshed every 5s for fallback`
+      : `time source: cached anchor + monotonic delta (device clock returned a non-sane value)`;
 
   requestAnimationFrame(render);
 }
