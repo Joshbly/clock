@@ -105,6 +105,7 @@ h1 {
   left: 50%;
   transform-origin: 50% 100%;
   border-radius: 2px;
+  z-index: 3;
 }
 
 .hand-hour {
@@ -385,6 +386,7 @@ h1 {
   width: 100%;
   height: 100%;
   pointer-events: none;
+  overflow: visible;
 }
 
 /* Analog clock pinned exactly at orrery center, fits inside Mercury orbit */
@@ -415,11 +417,17 @@ h1 {
 
 .planet-label {
   font-size: 10px;
-  fill: #5a5a72;
+  fill: #6e6e88;
   font-family: inherit;
   pointer-events: none;
-  text-anchor: middle;
   letter-spacing: 0.05em;
+}
+
+.planet-leader {
+  stroke: #2c2c40;
+  stroke-width: 0.5;
+  pointer-events: none;
+  opacity: 0.6;
 }
 
 .confidence-ring {
@@ -557,6 +565,7 @@ h1 {
 .world-card {
   width: 100%;
   margin-top: 0.5rem;
+  position: relative;
 }
 
 .card-title-row {
@@ -683,6 +692,35 @@ h1 {
   border-radius: 50%;
   margin-right: 0.4rem;
   vertical-align: middle;
+}
+
+.sunrise-tooltip {
+  display: none;
+  position: absolute;
+  background: #0c0c16ee;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 0.7rem 1rem;
+  font-size: 0.6rem;
+  color: #ccc;
+  pointer-events: none;
+  z-index: 10;
+  max-width: 280px;
+  line-height: 1.7;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+}
+
+.sunrise-tooltip .tooltip-title {
+  color: #ffd166;
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+}
+
+.sunrise-tooltip .polar-note {
+  color: #ff8844;
+  font-style: italic;
 }
 
 /* ============================================
@@ -871,6 +909,7 @@ h1 {
       <div class="world-readout" id="world-readout">—</div>
     </div>
     <svg class="world-map" id="world-map" viewBox="0 0 1600 800" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="sunrise-tooltip" id="sunrise-tooltip"></div>
     <div class="world-legend">
       <span><span class="legend-swatch" style="background:#ffd166"></span>☉ sub-solar (sun overhead)</span>
       <span><span class="legend-swatch" style="background:#d8d8e8"></span>☽ sub-lunar (moon overhead)</span>
@@ -1108,16 +1147,18 @@ function render() {
   glowDot.style.opacity = 0.05 + secondFraction * 0.95;
   glowDot.style.boxShadow = `0 0 ${4 + secondFraction * 16}px rgba(255, 68, 68, ${secondFraction * 0.8})`;
 
-  // 10 dots: light up in sequence, one every 100ms
+  // 10 dots: dot i lights when the i-th tenth has COMPLETED (i.e., ms ≥ (i+1)*100).
+  // At ms=0 → 0 dots lit. At ms=100 → dot 0 lit. At ms=999 → all 9 lit.
   const tenthsLit = Math.floor(t.milliseconds / 100);
   for (let i = 0; i < 10; i++) {
-    tenthDots[i].className = 'dot' + (i <= tenthsLit ? ' lit' : '');
+    tenthDots[i].className = 'dot' + (i < tenthsLit ? ' lit' : '');
   }
 
-  // 100 dots: light up in sequence, one every 10ms
+  // 100 dots: dot i lights when the i-th hundredth has COMPLETED.
+  // At ms=0 → 0 dots lit. At ms=10 → dot 0 lit. At ms=999 → 99 lit.
   const hundredthsLit = Math.floor(t.milliseconds / 10);
   for (let i = 0; i < 100; i++) {
-    hundredthDots[i].className = 'dot' + (i <= hundredthsLit ? ' lit' : '');
+    hundredthDots[i].className = 'dot' + (i < hundredthsLit ? ' lit' : '');
   }
 
   document.getElementById('digital').innerHTML =
@@ -1343,15 +1384,15 @@ const PLANET_PERTURBATIONS = {
 // to 3 chars so they don't pile up. Outer planets get more pixel room so
 // they keep full names. labelOffset is extra radial push from the planet dot.
 const PLANET_INFO = [
-  { key: 'mercury', name: 'Mer', color: '#a0a0a0', radiusPx: 2.5, labelOffset: 18 },
-  { key: 'venus',   name: 'Ven', color: '#e0c068', radiusPx: 4.0, labelOffset: 14 },
-  { key: 'earth',   name: 'Ear', color: '#5588dd', radiusPx: 4.5, labelOffset: 14 },
-  { key: 'mars',    name: 'Mar', color: '#cc5544', radiusPx: 3.5, labelOffset: 14 },
-  { key: 'jupiter', name: 'Jupiter', color: '#d4a878', radiusPx: 8.0, labelOffset: 14 },
-  { key: 'saturn',  name: 'Saturn',  color: '#e6cc99', radiusPx: 7.0, labelOffset: 14 },
-  { key: 'uranus',  name: 'Uranus',  color: '#88cccc', radiusPx: 5.5, labelOffset: 14 },
-  { key: 'neptune', name: 'Neptune', color: '#5566cc', radiusPx: 5.5, labelOffset: 14 },
-  { key: 'pluto',   name: 'Pluto',   color: '#aa9988', radiusPx: 2.0, labelOffset: 12 }
+  { key: 'mercury', name: 'Mercury', color: '#a0a0a0', radiusPx: 2.5 },
+  { key: 'venus',   name: 'Venus',   color: '#e0c068', radiusPx: 4.0 },
+  { key: 'earth',   name: 'Earth',   color: '#5588dd', radiusPx: 4.5 },
+  { key: 'mars',    name: 'Mars',    color: '#cc5544', radiusPx: 3.5 },
+  { key: 'jupiter', name: 'Jupiter', color: '#d4a878', radiusPx: 8.0 },
+  { key: 'saturn',  name: 'Saturn',  color: '#e6cc99', radiusPx: 7.0 },
+  { key: 'uranus',  name: 'Uranus',  color: '#88cccc', radiusPx: 5.5 },
+  { key: 'neptune', name: 'Neptune', color: '#5566cc', radiusPx: 5.5 },
+  { key: 'pluto',   name: 'Pluto',   color: '#aa9988', radiusPx: 2.0 }
 ];
 
 // ============================================================
@@ -2212,6 +2253,15 @@ function buildOrrery() {
     svg.appendChild(dot);
     orreryPlanetDots[info.key] = dot;
 
+    // Leader line (planet → label) — drawn FIRST so it sits beneath everything else
+    const leader = svgEl('line', {
+      class: 'planet-leader',
+      x1: ORRERY_CENTER, y1: ORRERY_CENTER,
+      x2: ORRERY_CENTER, y2: ORRERY_CENTER
+    });
+    svg.appendChild(leader);
+    orreryPlanetDots[info.key + '_leader'] = leader;
+
     // Label slightly outside the planet
     const label = svgEl('text', {
       class: 'planet-label',
@@ -2235,11 +2285,139 @@ function buildOrrery() {
   svg.appendChild(orreryMoonDot);
 }
 
+// Estimate label bounding-box width in SVG units. At our 10px font with
+// 0.05em letter-spacing, mixed-case names average ~6.5px per character.
+function _estimateLabelWidth(name) {
+  return name.length * 6.5 + 4;
+}
+
+// Compute the bounding box of a label given anchor and (cx, cy) anchor point.
+// Returns { x, y, w, h } where (x, y) is top-left.
+function _labelBBox(cx, cy, anchor, w) {
+  const h = 12;
+  let x;
+  if (anchor === 'start') x = cx;
+  else if (anchor === 'end') x = cx - w;
+  else x = cx - w / 2;
+  return { x, y: cy - 9, w, h };
+}
+
+// Distance from a point (px, py) to the closest edge of an axis-aligned rect.
+// Returns 0 if point is inside.
+function _distPointToRect(px, py, r) {
+  const dx = Math.max(r.x - px, 0, px - (r.x + r.w));
+  const dy = Math.max(r.y - py, 0, py - (r.y + r.h));
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+// Do two axis-aligned bounding boxes overlap?
+function _bboxOverlap(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+// Pick the best label position for a planet using 16-direction candidate scoring.
+// Avoids: planet glows, central clock, SVG edges, already-placed labels.
+function _pickLabelPosition(p, allPlanets, placedLabels, svgSize) {
+  const labelW = _estimateLabelWidth(p.info.name);
+  // Distance from planet center to label anchor — clears the glow with margin
+  const baseDist = p.info.radiusPx * 2.0 + 6;
+
+  let best = null;
+  let bestScore = Infinity;
+
+  // 16 candidate directions for fine-grained placement
+  for (let i = 0; i < 16; i++) {
+    const ang = (i / 16) * 2 * Math.PI;
+    const cosA = Math.cos(ang), sinA = Math.sin(ang);
+
+    // Add a tiny extra distance for diagonal directions to keep clearance uniform
+    const dist = baseDist;
+    const acx = p.x + cosA * dist;
+    const acy = p.y + sinA * dist;
+
+    // Determine anchor based on which compass octant we're in
+    let anchor;
+    if (cosA > 0.4) anchor = 'start';
+    else if (cosA < -0.4) anchor = 'end';
+    else anchor = 'middle';
+
+    // Adjust acy so the text vertical center is at the candidate point
+    // (text baseline is below center; +4 puts the visual middle at acy)
+    const cy = acy + 4;
+    const bb = _labelBBox(acx, cy, anchor, labelW);
+
+    // ---- SCORING ----
+    let score = 0;
+
+    // (1) Edges: hard penalty if label extends off the SVG (with 8px margin)
+    if (bb.x < 8 || bb.x + bb.w > svgSize - 8 ||
+        bb.y < 8 || bb.y + bb.h > svgSize - 8) {
+      score += 100000;
+    }
+
+    // (2) Central clock: the analog clock occupies a 180px disk centered at SVG center.
+    //     Its bounding box is roughly (CX-90, CY-90, 180, 180). Strong penalty for overlap.
+    const clockHalf = 92;
+    if (bb.x < ORRERY_CENTER + clockHalf && bb.x + bb.w > ORRERY_CENTER - clockHalf &&
+        bb.y < ORRERY_CENTER + clockHalf && bb.y + bb.h > ORRERY_CENTER - clockHalf) {
+      score += 50000;
+    }
+
+    // (3) Other planet glows: penalty proportional to overlap depth
+    for (const other of allPlanets) {
+      if (other.key === p.key) continue;
+      const glowR = other.info.radiusPx * 1.8 + 3;
+      const d = _distPointToRect(other.x, other.y, bb);
+      if (d < glowR) score += 2000 * (glowR - d) / glowR;
+    }
+
+    // (4) Already-placed labels: heavy penalty for overlap
+    for (const pl of placedLabels) {
+      if (_bboxOverlap(bb, pl)) {
+        // Compute overlap area as severity
+        const ox = Math.min(bb.x + bb.w, pl.x + pl.w) - Math.max(bb.x, pl.x);
+        const oy = Math.min(bb.y + bb.h, pl.y + pl.h) - Math.max(bb.y, pl.y);
+        score += 3000 + ox * oy * 5;
+      } else {
+        // Soft penalty if very close (under 4px gap)
+        const cdx = Math.max(0, Math.max(pl.x - (bb.x + bb.w), bb.x - (pl.x + pl.w)));
+        const cdy = Math.max(0, Math.max(pl.y - (bb.y + bb.h), bb.y - (pl.y + pl.h)));
+        const closest = Math.sqrt(cdx * cdx + cdy * cdy);
+        if (closest < 4) score += 200 * (4 - closest);
+      }
+    }
+
+    // (5) Own planet glow: should never overlap (sanity check, baseDist usually clears)
+    const selfGlow = p.info.radiusPx * 1.8 + 2;
+    const dSelf = _distPointToRect(p.x, p.y, bb);
+    if (dSelf < selfGlow) score += 5000 * (selfGlow - dSelf);
+
+    // (6) Preference bonus: outward (radially away from sun) is most natural to read
+    const radDx = p.x - ORRERY_CENTER, radDy = p.y - ORRERY_CENTER;
+    const radMag = Math.sqrt(radDx * radDx + radDy * radDy);
+    if (radMag > 0) {
+      const outwardness = (cosA * radDx + sinA * radDy) / radMag;
+      score -= outwardness * 8;  // up to -8 bonus for fully outward
+    }
+
+    // (7) Mild preference for "north" (above planet) — easier to scan visually
+    score -= (-sinA) * 2;
+
+    if (score < bestScore) {
+      bestScore = score;
+      best = { acx, acy: cy, anchor, bbox: bb, score };
+    }
+  }
+
+  return best;
+}
+
 function updateOrrery(astroState) {
+  // ---- PASS 1: place all planet dots and gather screen-space data ----
+  const placed = [];
   for (const info of PLANET_INFO) {
     const pos = astroState.planets[info.key];
     if (!pos) continue;
-    // Project to 2D (top-down ecliptic). Heliocentric longitude + log radius.
     const rPx = auToPixels(pos.r);
     const lonRad = pos.lon * D2R;
     const cosL = Math.cos(lonRad), sinL = Math.sin(lonRad);
@@ -2247,15 +2425,46 @@ function updateOrrery(astroState) {
     const y = ORRERY_CENTER + rPx * sinL;
     orreryPlanetDots[info.key].setAttribute('cx', x);
     orreryPlanetDots[info.key].setAttribute('cy', y);
+    placed.push({ key: info.key, info, x, y });
+  }
 
-    // Label pushed radially OUTWARD from the sun, with per-planet offset
-    // so inner-system planets (clustered under log scaling) don't pile up.
-    const off = (info.labelOffset || 12) + info.radiusPx;
-    const lx = x + off * cosL;
-    const ly = y + off * sinL + 3; // +3 = vertical-center text
-    const label = orreryPlanetDots[info.key + '_label'];
-    label.setAttribute('x', lx);
-    label.setAttribute('y', ly);
+  // ---- PASS 2: place each label using 16-direction collision-aware scoring ----
+  // Iterate inner planets first since space is tighter near the central clock —
+  // they pin their positions, and outer planets' labels then route around them.
+  const SVG_SIZE = ORRERY_CENTER * 2;
+  const placedBoxes = [];
+  for (const p of placed) {
+    const choice = _pickLabelPosition(p, placed, placedBoxes, SVG_SIZE);
+    const label = orreryPlanetDots[p.key + '_label'];
+    label.setAttribute('x', choice.acx.toFixed(1));
+    label.setAttribute('y', choice.acy.toFixed(1));
+    label.setAttribute('text-anchor', choice.anchor);
+    placedBoxes.push(choice.bbox);
+
+    // Leader line: from planet edge → near edge of label bbox
+    const leader = orreryPlanetDots[p.key + '_leader'];
+    if (leader) {
+      // Start point: planet edge in the direction of the label
+      const dx = choice.acx - p.x, dy = choice.acy - 4 - p.y;
+      const dm = Math.sqrt(dx * dx + dy * dy);
+      const startR = p.info.radiusPx + 1;
+      const sx = p.x + (dx / dm) * startR;
+      const sy = p.y + (dy / dm) * startR;
+      // End point: just before label start (don't run into text)
+      const endR = Math.max(0, dm - p.info.radiusPx * 1.6 - 4);
+      const ex = p.x + (dx / dm) * endR;
+      const ey = p.y + (dy / dm) * endR;
+      // Only draw if there's meaningful gap between dot and label
+      if (dm > p.info.radiusPx * 2.5 + 4) {
+        leader.setAttribute('x1', sx.toFixed(1));
+        leader.setAttribute('y1', sy.toFixed(1));
+        leader.setAttribute('x2', ex.toFixed(1));
+        leader.setAttribute('y2', ey.toFixed(1));
+        leader.setAttribute('opacity', '0.5');
+      } else {
+        leader.setAttribute('opacity', '0');
+      }
+    }
   }
 
   // Place Moon orbiting Earth (visually amplified — real Moon is 0.0026 AU
@@ -2924,6 +3133,10 @@ function astroUpdate(jd) {
   updateEclipsePanel(astroState, jd);
   updateConfidence(confidence);
   updateWorldMapSlow(astroState, jd);
+
+  // Debug hook for headless test harness
+  window.__lastAstroState = astroState;
+  window.__updateOrrery = updateOrrery;
 }
 
 // --- BUILD DOTS ---
@@ -2947,12 +3160,166 @@ function buildDots() {
   }
 }
 
+// ============================================================
+// SUNRISE/SUNSET FROM FIRST PRINCIPLES
+// Given a geographic point, compute local sunrise & sunset for the current date.
+// Uses the solar declination and hour-angle geometry. Handles polar day/night
+// (when the Sun never sets or never rises) by reporting the next transition date.
+// ============================================================
+
+// Solar hour angle at sunrise/sunset for a given latitude and solar declination.
+// cos(H₀) = (sin(h₀) − sin(φ)·sin(δ)) / (cos(φ)·cos(δ))
+// h₀ = -0.8333° (standard refraction + solar semi-diameter correction for sunrise/set).
+// Returns H₀ in degrees, or null if always above/below horizon.
+function sunriseHourAngle(latDeg, decDeg) {
+  const h0 = -0.8333 * D2R;
+  const phi = latDeg * D2R;
+  const delta = decDeg * D2R;
+  const denom = Math.cos(phi) * Math.cos(delta);
+  if (Math.abs(denom) < 1e-10) return null;
+  const cosH = (Math.sin(h0) - Math.sin(phi) * Math.sin(delta)) / denom;
+  if (cosH > 1) return { polar: 'night' };   // sun never rises
+  if (cosH < -1) return { polar: 'day' };    // sun never sets
+  return { H0: Math.acos(cosH) * R2D };
+}
+
+// For a given geographic lat/lon and the current JD, compute sunrise and sunset times (UT).
+// Also handles polar: reports the next date when the sun will rise or set.
+function computeSunriseSunset(latDeg, lonDeg, jdUT) {
+  // Approximate solar noon at this longitude
+  const yearFrac = (jdUT - J2000_JD) / 365.25 + 2000;
+  const dTsec = deltaT(yearFrac);
+  
+  // JD of local mean solar noon: when the sun transits the observer's meridian
+  // n = JD - J2000 - lonW/360, where lonW = -lonDeg (west positive for this formula)
+  const n0 = Math.round(jdUT - J2000_JD + 0.0008 + lonDeg / 360);
+  const jNoon = J2000_JD + n0 + 0.0008 - lonDeg / 360;  // approximate transit
+  
+  // Solar position at transit (good enough for sunrise/set calculation)
+  const T = (jNoon + dTsec / 86400 - J2000_JD) / 36525;
+  const earth = computePlanetPos('earth', T);
+  const sun = sunPosition(T, earth);
+  
+  // Solar declination (from ecliptic coordinates)
+  const sunLonDate = precessJ2000LonToDate(sun.lon, T);
+  const eps = meanObliquity(T);
+  const { dec } = eclipticToEquatorial(sunLonDate, sun.lat, eps);
+  
+  const ha = sunriseHourAngle(latDeg, dec);
+  
+  if (ha && ha.polar) {
+    // Polar case: find next date when sun will rise/set by scanning forward
+    const direction = ha.polar;  // 'day' or 'night'
+    let nextTransition = null;
+    for (let dayOff = 1; dayOff <= 200; dayOff++) {
+      const futureJD = jdUT + dayOff;
+      const futureN = Math.round(futureJD - J2000_JD + 0.0008 + lonDeg / 360);
+      const futureNoon = J2000_JD + futureN + 0.0008 - lonDeg / 360;
+      const fT = (futureNoon + dTsec / 86400 - J2000_JD) / 36525;
+      const fEarth = computePlanetPos('earth', fT);
+      const fSun = sunPosition(fT, fEarth);
+      const fLon = precessJ2000LonToDate(fSun.lon, fT);
+      const fEps = meanObliquity(fT);
+      const { dec: fDec } = eclipticToEquatorial(fLon, fSun.lat, fEps);
+      const fHA = sunriseHourAngle(latDeg, fDec);
+      if (fHA && fHA.H0 !== undefined) {
+        nextTransition = { dayOffset: dayOff, jd: futureJD };
+        break;
+      }
+    }
+    return { polar: direction, dec, nextTransition };
+  }
+  
+  // Normal case: compute sunrise and sunset times
+  const H0deg = ha.H0;
+  const riseJD = jNoon - H0deg / 360;
+  const setJD = jNoon + H0deg / 360;
+  
+  // Convert to hours UT
+  const riseHours = (riseJD - Math.floor(jdUT - 0.5) - 0.5) * 24;
+  const setHours = (setJD - Math.floor(jdUT - 0.5) - 0.5) * 24;
+  
+  return { rise: riseHours, set: setHours, dec, daylightHours: 2 * H0deg / 15 };
+}
+
+function fmtHoursToHHMM(h) {
+  h = ((h % 24) + 24) % 24;
+  const hh = Math.floor(h);
+  const mm = Math.round((h - hh) * 60);
+  return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
+}
+
+// Click handler on world map
+function setupMapClick() {
+  const svg = document.getElementById('world-map');
+  const tooltip = document.getElementById('sunrise-tooltip');
+  if (!svg || !tooltip) return;
+  
+  let tooltipTimeout = null;
+  
+  svg.style.cursor = 'crosshair';
+  svg.addEventListener('click', (e) => {
+    const rect = svg.getBoundingClientRect();
+    const scaleX = MAP_W / rect.width;
+    const scaleY = MAP_H / rect.height;
+    const svgX = (e.clientX - rect.left) * scaleX;
+    const svgY = (e.clientY - rect.top) * scaleY;
+    
+    // Convert pixel → geographic
+    const lon = (svgX / MAP_W) * 360 - 180;
+    const lat = 90 - (svgY / MAP_H) * 180;
+    
+    if (!astroState) return;
+    
+    const result = computeSunriseSunset(lat, lon, astroState.jd);
+    const ns = lat >= 0 ? 'N' : 'S';
+    const ew = lon >= 0 ? 'E' : 'W';
+    
+    let html = `<div class="tooltip-title">${Math.abs(lat).toFixed(2)}°${ns}, ${Math.abs(lon).toFixed(2)}°${ew}</div>`;
+    
+    if (result.polar) {
+      if (result.polar === 'day') {
+        html += `<div class="polar-note">☀ Polar day — sun does not set</div>`;
+      } else {
+        html += `<div class="polar-note">☾ Polar night — sun does not rise</div>`;
+      }
+      if (result.nextTransition) {
+        const cal = jdToCalendar(result.nextTransition.jd);
+        const verb = result.polar === 'night' ? 'next sunrise' : 'next sunset';
+        html += `<div>${verb}: ${cal.year}-${String(cal.month).padStart(2,'0')}-${String(cal.day).padStart(2,'0')} (in ${result.nextTransition.dayOffset} days)</div>`;
+      }
+    } else {
+      html += `<div>sunrise: <b>${fmtHoursToHHMM(result.rise)} UT</b></div>`;
+      html += `<div>sunset:  <b>${fmtHoursToHHMM(result.set)} UT</b></div>`;
+      html += `<div>daylight: ${result.daylightHours.toFixed(1)} hours</div>`;
+    }
+    html += `<div style="color:#555;margin-top:0.3rem">solar dec: ${result.dec.toFixed(2)}°</div>`;
+    
+    // Position tooltip near the click
+    const tooltipX = e.clientX - rect.left + 12;
+    const tooltipY = e.clientY - rect.top - 10;
+    tooltip.style.left = Math.min(tooltipX, rect.width - 290) + 'px';
+    tooltip.style.top = tooltipY + 'px';
+    tooltip.innerHTML = html;
+    tooltip.style.display = 'block';
+    
+    if (tooltipTimeout) clearTimeout(tooltipTimeout);
+    tooltipTimeout = setTimeout(() => { tooltip.style.display = 'none'; }, 8000);
+  });
+  
+  // Hide on click outside or scroll
+  document.addEventListener('click', (e) => {
+    if (!svg.contains(e.target)) tooltip.style.display = 'none';
+  });
+}
+
 // --- BOOT ---
 buildClockFace();
 buildDots();
 buildOrrery();
 buildMoonPhase();
 buildWorldMap();
+setupMapClick();
 requestAnimationFrame(render);
 </script>
 </body>
