@@ -5547,7 +5547,15 @@ const _ECLIPTIC_POLE_J2000 = (() => {
 
 function _periodicPrecessionMatrix(jdTT) {
   const dyr = (jdTT - J2000_JD) / 365.25;
-  const theta = -2 * Math.PI * dyr / PRECESSION_PERIOD_YEARS;
+  // M is the J2000 → date COORDINATE transform, not the pole's physical
+  // rotation. The pole physically rotates retrograde (θ_phys = -2π dyr/T),
+  // but the coord transform that takes a star FROM J2000 INTO the date
+  // frame is the INVERSE of that rotation: R(-θ_phys) = R(+2π dyr/T).
+  // Earlier I had a minus sign here, which made time run backward — Vega
+  // appeared near the pole at 9790 BCE instead of 13727 CE. Verified by
+  // scanning all named pole stars against published closest-approach
+  // epochs; see scratch/sign_fix.mjs.
+  const theta = 2 * Math.PI * dyr / PRECESSION_PERIOD_YEARS;
   const [ex, ey, ez] = _ECLIPTIC_POLE_J2000;
   const c = Math.cos(theta), s = Math.sin(theta), oc = 1 - c;
   // Rodrigues' rotation formula expanded into a 3x3 matrix
