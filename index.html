@@ -1910,14 +1910,18 @@ function unixMsToComponents(unixMs) {
   return { year, month, day, hours, minutes, seconds, milliseconds, dayOfWeek, totalDays };
 }
 
-// --- TIMEZONE (captured once — one concession to locality) ---
-const TZ_OFFSET_MINUTES = -(new Date().getTimezoneOffset());
-const TZ_OFFSET_MS = TZ_OFFSET_MINUTES * 60 * 1000;
+// --- TIMEZONE (read live from the OS every render) ---
+// Computing this fresh per frame is essentially free (sub-microsecond) and
+// means DST transitions, traveling laptops, and manual tz changes all flow
+// through to the clock face within one animation frame — no reload needed.
+function getTzOffsetMinutes() { return -(new Date().getTimezoneOffset()); }
+function getTzOffsetMs() { return getTzOffsetMinutes() * 60 * 1000; }
 
 function tzName() {
-  let h = Math.floor(Math.abs(TZ_OFFSET_MINUTES) / 60);
-  let m = Math.abs(TZ_OFFSET_MINUTES) % 60;
-  let sign = TZ_OFFSET_MINUTES >= 0 ? '+' : '-';
+  const off = getTzOffsetMinutes();
+  let h = Math.floor(Math.abs(off) / 60);
+  let m = Math.abs(off) % 60;
+  let sign = off >= 0 ? '+' : '-';
   return `UTC${sign}${pad(h)}:${pad(m)}`;
 }
 
@@ -1963,7 +1967,7 @@ function buildClockFace() {
 
 function render() {
   const ourUnixMs = getNow();
-  const localMs = ourUnixMs + TZ_OFFSET_MS;
+  const localMs = ourUnixMs + getTzOffsetMs();
 
   const t = unixMsToComponents(localMs);
   const fractionalSecond = (t.milliseconds / 1000);
@@ -5510,8 +5514,32 @@ function celestialFix(observations, startLat, startLon, maxIter = 20) {
 // ============================================================
 
 // Observer state — updated by clicking the world map.
+// Observer location for sky chart, world-map crosshair, isogonics readout,
+// celestial-nav fix overlay, etc. Persisted to localStorage so it survives
+// reloads — defaults to NYC on first ever open.
+const OBSERVER_STORAGE_KEY = 'clock-observer';
 let SKY_OBSERVER_LAT = 40.7;
 let SKY_OBSERVER_LON = -74.0;
+(function restoreObserver() {
+  try {
+    const raw = localStorage.getItem(OBSERVER_STORAGE_KEY);
+    if (!raw) return;
+    const o = JSON.parse(raw);
+    if (Number.isFinite(o.lat) && Number.isFinite(o.lon)
+        && o.lat >= -90 && o.lat <= 90 && o.lon >= -180 && o.lon <= 180) {
+      SKY_OBSERVER_LAT = o.lat;
+      SKY_OBSERVER_LON = o.lon;
+    }
+  } catch (_) {}
+})();
+function persistObserver() {
+  try {
+    localStorage.setItem(OBSERVER_STORAGE_KEY, JSON.stringify({
+      lat: SKY_OBSERVER_LAT,
+      lon: SKY_OBSERVER_LON
+    }));
+  } catch (_) {}
+}
 
 // Display mode: 'realtime' uses current JD; 'deeptime' animates proper motion.
 let SKY_MODE = 'realtime';
@@ -6261,9 +6289,10 @@ function setupMapClick() {
 
     if (!astroState) return;
 
-    // Update sky chart observer
+    // Update sky chart observer (persisted across reloads)
     SKY_OBSERVER_LAT = lat;
     SKY_OBSERVER_LON = lon;
+    persistObserver();
     _skyDirty = true;
     drawSkyChart();
     
