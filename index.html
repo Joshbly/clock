@@ -1,0 +1,2959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>First Principles Clock</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0a0a0f;
+  color: #e0e0e0;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.5rem 3rem;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 1240px;
+}
+
+/* Two-column main area: orrery (left) + info stack (right).
+   Footer below spans full width. */
+.main-grid {
+  display: grid;
+  grid-template-columns: 800px 360px;
+  gap: 1.5rem;
+  align-items: start;
+  justify-content: center;
+}
+
+@media (max-width: 1240px) {
+  .main-grid {
+    grid-template-columns: 1fr;
+  }
+  .orrery-container { justify-self: center; }
+  .info-stack { width: 100%; max-width: 600px; justify-self: center; }
+}
+
+.info-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+h1 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: #555;
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+}
+
+/* Compact analog clock — sized to fit inside Mercury's orbit (radius 120px).
+   Total face diameter 180px → outer edge 90px from orrery center. */
+.clock-face {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 1px solid #1a1a2e;
+  background: radial-gradient(circle at 50% 50%, #14141f 0%, #0a0a0f 80%);
+  box-shadow: 0 0 80px rgba(255, 200, 100, 0.06), inset 0 0 24px rgba(0,0,0,0.6);
+}
+
+.clock-face .tick {
+  position: absolute;
+  width: 1px;
+  height: 7px;
+  background: #2a2a40;
+  top: 4px;
+  left: 50%;
+  margin-left: -0.5px;
+  transform-origin: 50% 86px;
+}
+
+.clock-face .tick.major {
+  height: 12px;
+  width: 2px;
+  margin-left: -1px;
+  background: #555;
+}
+
+.clock-face .hour-num {
+  position: absolute;
+  font-size: 0.5rem;
+  color: #444;
+  width: 16px;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.hand {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform-origin: 50% 100%;
+  border-radius: 2px;
+}
+
+.hand-hour {
+  width: 2.5px;
+  height: 38px;
+  background: #c0c0c0;
+  margin-left: -1.25px;
+}
+
+.hand-minute {
+  width: 2px;
+  height: 60px;
+  background: #8888cc;
+  margin-left: -1px;
+}
+
+.hand-second {
+  width: 1px;
+  height: 72px;
+  background: #ff4444;
+  margin-left: -0.5px;
+}
+
+.center-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: #ff4444;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+/* Digital time/calendar — sidebar card */
+.digital {
+  font-size: 2.5rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: #ddd;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.digital .seconds {
+  color: #ff4444;
+  font-size: 1.5rem;
+}
+
+.digital .ms {
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.calendar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+}
+
+.calendar .date {
+  font-size: 0.95rem;
+  color: #888;
+  letter-spacing: 0.08em;
+}
+
+.calendar .day-name {
+  font-size: 0.65rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+}
+
+/* Generic sidebar card */
+.card {
+  border: 1px solid #181828;
+  border-radius: 6px;
+  background: #0c0c14;
+  padding: 0.9rem 1rem;
+}
+
+.card-title {
+  font-size: 0.55rem;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  margin-bottom: 0.6rem;
+}
+
+.info-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 1.25rem;
+  font-size: 0.6rem;
+  color: #333;
+}
+
+.info-panel .label { color: #444; }
+.info-panel .value { color: #666; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Footer strip — drift, boot mode, epoch all in one bar */
+.footer-strip {
+  margin-top: 0.5rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.drift-panel {
+  padding: 0.75rem 1.25rem;
+  border: 1px solid #1a1a2e;
+  border-radius: 6px;
+  background: #0c0c14;
+  text-align: center;
+  min-width: 320px;
+}
+
+.drift-panel .drift-title {
+  font-size: 0.55rem;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  margin-bottom: 0.4rem;
+}
+
+.drift-panel .drift-value {
+  font-size: 1.05rem;
+  color: #ff8844;
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+}
+
+.drift-panel .drift-value.synced {
+  color: #44aa66;
+}
+
+.drift-panel .drift-meta {
+  font-size: 0.55rem;
+  color: #333;
+  margin-top: 0.3rem;
+}
+
+.drift-panel .drift-rate {
+  font-size: 0.6rem;
+  color: #555;
+  margin-top: 0.2rem;
+}
+
+.boot-mode {
+  font-size: 0.55rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 3px;
+  background: #111;
+  border: 1px solid #222;
+  letter-spacing: 0.1em;
+}
+
+.boot-mode.fresh { color: #44aa66; }
+.boot-mode.persisted { color: #ff8844; }
+
+.epoch-bar {
+  font-size: 0.55rem;
+  color: #222;
+  letter-spacing: 0.1em;
+}
+
+.pulse {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #ff4444;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  animation: pulse-anim 1s ease-in-out infinite;
+}
+
+@keyframes pulse-anim {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+.subdivisions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dot-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.dot-row-label {
+  font-size: 0.55rem;
+  color: #444;
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.dot-grid {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+}
+
+.dot-row.tenths .dot-grid {
+  grid-template-columns: repeat(10, 1fr);
+}
+
+.dot-row.hundredths .dot-grid {
+  grid-template-columns: repeat(50, 1fr);
+}
+
+.dot-grid .dot {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #1a1a2e;
+}
+
+.dot-row.tenths .dot-grid .dot {
+  height: 6px;
+}
+
+.dot-grid .dot.lit {
+  background: #ff8844;
+  box-shadow: 0 0 3px rgba(255, 136, 68, 0.5);
+}
+
+.dot-row.tenths .dot-grid .dot.lit {
+  background: #ff4444;
+  box-shadow: 0 0 4px rgba(255, 68, 68, 0.6);
+}
+
+.glow-dot-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.glow-dot-container .dot-row-label {
+  font-size: 0.55rem;
+  color: #444;
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.glow-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff4444;
+  opacity: 0.05;
+  transition: none;
+}
+
+/* ============================================
+   ORRERY — top-down solar system, clock at center
+   ============================================ */
+.orrery-container {
+  position: relative;
+  width: 800px;
+  height: 800px;
+}
+
+.orrery-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Analog clock pinned exactly at orrery center, fits inside Mercury orbit */
+.clock-face {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.orbit-path {
+  fill: none;
+  stroke: #1a1a2e;
+  stroke-width: 0.8;
+  opacity: 0.55;
+}
+
+.orbit-path.earth {
+  stroke: #2a3a5a;
+  stroke-width: 1;
+  opacity: 0.85;
+}
+
+.planet-dot {
+  cursor: default;
+}
+
+.planet-label {
+  font-size: 10px;
+  fill: #5a5a72;
+  font-family: inherit;
+  pointer-events: none;
+  text-anchor: middle;
+  letter-spacing: 0.05em;
+}
+
+.confidence-ring {
+  fill: none;
+  stroke: #ff6644;
+  stroke-width: 0.5;
+  opacity: 0.25;
+  stroke-dasharray: 4 8;
+}
+
+/* ============================================
+   MOON PHASE
+   ============================================ */
+.moon-phase-panel {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.moon-circle {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.moon-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.65rem;
+  color: #666;
+}
+
+.moon-info .phase-name {
+  color: #aaa;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.moon-info .illumination {
+  color: #888;
+  font-variant-numeric: tabular-nums;
+}
+
+.moon-info .moon-distance {
+  color: #555;
+  font-size: 0.55rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
+   ECLIPSE PANEL
+   ============================================ */
+.eclipse-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  font-size: 0.65rem;
+}
+
+.eclipse-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.eclipse-cell .eclipse-type-label {
+  color: #444;
+  font-size: 0.5rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.eclipse-cell .eclipse-when {
+  color: #888;
+  font-size: 0.65rem;
+}
+
+.eclipse-cell .eclipse-detail {
+  color: #555;
+  font-size: 0.55rem;
+}
+
+.eclipse-cell .eclipse-when.imminent {
+  color: #ff8844;
+}
+
+.eclipse-cell .eclipse-when.active {
+  color: #ff4444;
+  animation: pulse-anim 1s ease-in-out infinite;
+}
+
+/* ============================================
+   CONFIDENCE INDICATOR
+   ============================================ */
+.confidence-panel {
+  font-size: 0.6rem;
+  color: #444;
+  letter-spacing: 0.1em;
+}
+
+.confidence-bar {
+  width: 100%;
+  height: 1px;
+  background: #181828;
+  margin: 0.5rem 0 0.3rem;
+  position: relative;
+}
+
+.confidence-bar .marker {
+  position: absolute;
+  top: -3px;
+  width: 1px;
+  height: 7px;
+  background: #ff4444;
+}
+
+.confidence-bar .marker-j2000 {
+  background: #44aa66;
+  left: 50%;
+}
+
+.confidence-bounds {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.5rem;
+  color: #333;
+  width: 100%;
+}
+
+/* ============================================
+   WORLD MAP — subsolar point + eclipse markers
+   ============================================ */
+.world-card {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.card-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.6rem;
+}
+
+.world-readout {
+  font-size: 0.6rem;
+  color: #888;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+.world-map {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #06060c;
+  border-radius: 4px;
+}
+
+/* Continents */
+.world-map .land {
+  fill: #14141f;
+  stroke: #2a2a40;
+  stroke-width: 0.5;
+  stroke-linejoin: round;
+}
+
+/* Lat/lon graticule */
+.world-map .graticule {
+  fill: none;
+  stroke: #1a1a2a;
+  stroke-width: 0.5;
+  stroke-dasharray: 2 4;
+  opacity: 0.6;
+}
+
+/* Day/night terminator and shading */
+.world-map .day-side {
+  fill: rgba(255, 220, 140, 0.06);
+}
+
+.world-map .terminator {
+  fill: none;
+  stroke: rgba(255, 220, 140, 0.25);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+/* Subsolar point */
+.world-map .subsolar-glow {
+  fill: rgba(255, 220, 140, 0.15);
+}
+
+.world-map .subsolar-dot {
+  fill: #ffd166;
+  filter: drop-shadow(0 0 8px #ffaa44);
+}
+
+/* Moon-above-horizon boundary line */
+.world-map .moon-horizon {
+  fill: none;
+  stroke: rgba(180, 180, 220, 0.18);
+  stroke-width: 1;
+  stroke-dasharray: 1 3;
+}
+
+.world-map .sublunar-glow {
+  fill: rgba(180, 180, 220, 0.10);
+}
+
+.world-map .sublunar-dot {
+  fill: #d8d8e8;
+  filter: drop-shadow(0 0 6px #aaaacc);
+}
+
+/* Eclipse markers */
+.world-map .eclipse-marker {
+  fill: #ff4444;
+  stroke: #ff8888;
+  stroke-width: 1;
+  filter: drop-shadow(0 0 4px #ff4444);
+}
+
+.world-map .eclipse-marker.total {
+  fill: #ff2222;
+  stroke: #ffaaaa;
+}
+
+.world-map .eclipse-marker.annular {
+  fill: #ff8844;
+  stroke: #ffcc88;
+}
+
+.world-map .eclipse-marker.partial {
+  fill: #884444;
+  stroke: #cc8888;
+}
+
+.world-map .eclipse-label {
+  fill: #888;
+  font-size: 11px;
+  font-family: inherit;
+  pointer-events: none;
+}
+
+.world-legend {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.55rem;
+  color: #555;
+  margin-top: 0.6rem;
+}
+
+.world-legend .legend-swatch {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+
+/* ============================================
+   PER-ECLIPSE STANDALONE MAPS
+   ============================================ */
+.eclipse-maps-section {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.eclipse-maps-section-title {
+  margin-bottom: 0.6rem;
+}
+
+.eclipse-maps-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .eclipse-maps-grid { grid-template-columns: 1fr; }
+}
+
+.eclipse-maps-placeholder {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #555;
+  font-size: 0.65rem;
+  padding: 2rem;
+  letter-spacing: 0.1em;
+}
+
+.eclipse-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.eclipse-card .card-title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.eclipse-card .eclipse-track-meta {
+  font-size: 0.55rem;
+  color: #666;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.eclipse-card .eclipse-mini-map {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #06060c;
+  border-radius: 4px;
+}
+
+/* Path line styles, by eclipse type */
+.eclipse-mini-map .eclipse-track {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px currentColor);
+}
+
+.eclipse-mini-map .eclipse-track.total   { stroke: #ff3b3b; color: #ff3b3b; }
+.eclipse-mini-map .eclipse-track.annular { stroke: #ff9933; color: #ff9933; }
+.eclipse-mini-map .eclipse-track.hybrid  { stroke: #ff6688; color: #ff6688; }
+
+.eclipse-mini-map .eclipse-track-endpoint {
+  fill: #fff;
+  stroke: #000;
+  stroke-width: 0.5;
+}
+
+.eclipse-mini-map .eclipse-max-marker {
+  fill: #ffff66;
+  stroke: #fff;
+  stroke-width: 1;
+  filter: drop-shadow(0 0 5px #ffff66);
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>First Principles Astronomical Clock</h1>
+
+  <div class="main-grid">
+    <!-- LEFT: Orrery with small analog clock at center (the "Sun") -->
+    <div class="orrery-container">
+      <svg class="orrery-svg" id="orrery-svg" viewBox="0 0 800 800"></svg>
+      <div class="clock-face" id="clock-face">
+        <div class="hand hand-hour" id="hand-hour"></div>
+        <div class="hand hand-minute" id="hand-minute"></div>
+        <div class="hand hand-second" id="hand-second"></div>
+        <div class="center-dot"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Stacked info cards -->
+    <div class="info-stack">
+      <div class="card">
+        <div class="card-title">time · ut1</div>
+        <div class="digital" id="digital"></div>
+        <div class="calendar">
+          <div class="date" id="date-display"></div>
+          <div class="day-name" id="day-name"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">sub-second pulse</div>
+        <div class="subdivisions">
+          <div class="glow-dot-container">
+            <span class="dot-row-label">1s</span>
+            <div class="glow-dot" id="glow-dot"></div>
+          </div>
+          <div class="dot-row tenths">
+            <span class="dot-row-label">1/10</span>
+            <div class="dot-grid" id="tenths-dots"></div>
+          </div>
+          <div class="dot-row hundredths">
+            <span class="dot-row-label">1/100</span>
+            <div class="dot-grid" id="hundredths-dots"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">moon phase</div>
+        <div class="moon-phase-panel">
+          <svg class="moon-circle" id="moon-circle" viewBox="-50 -50 100 100"></svg>
+          <div class="moon-info">
+            <div class="phase-name" id="moon-phase-name">—</div>
+            <div class="illumination" id="moon-illumination">—</div>
+            <div class="moon-distance" id="moon-distance">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">eclipses</div>
+        <div class="eclipse-grid">
+          <div class="eclipse-cell">
+            <span class="eclipse-type-label">next solar</span>
+            <span class="eclipse-when" id="solar-eclipse-when">computing...</span>
+            <span class="eclipse-detail" id="solar-eclipse-detail"></span>
+          </div>
+          <div class="eclipse-cell">
+            <span class="eclipse-type-label">next lunar</span>
+            <span class="eclipse-when" id="lunar-eclipse-when">computing...</span>
+            <span class="eclipse-detail" id="lunar-eclipse-detail"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">heliocentric state</div>
+        <div class="info-panel" id="info-panel"></div>
+      </div>
+
+      <div class="card confidence-panel">
+        <div class="card-title">astronomical confidence</div>
+        <div id="confidence-text">computing...</div>
+        <div class="confidence-bar">
+          <div class="marker marker-j2000"></div>
+          <div class="marker" id="confidence-marker"></div>
+        </div>
+        <div class="confidence-bounds">
+          <span>−25,000y</span><span>J2000</span><span>+25,000y</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- World map: subsolar point (where the sun is overhead) + day/night
+       terminator + upcoming solar eclipse track midpoints -->
+  <div class="card world-card">
+    <div class="card-title-row">
+      <div class="card-title">earth · subsolar point &amp; upcoming solar eclipses</div>
+      <div class="world-readout" id="world-readout">—</div>
+    </div>
+    <svg class="world-map" id="world-map" viewBox="0 0 1600 800" preserveAspectRatio="xMidYMid meet"></svg>
+    <div class="world-legend">
+      <span><span class="legend-swatch" style="background:#ffd166"></span>☉ sub-solar (sun overhead)</span>
+      <span><span class="legend-swatch" style="background:#d8d8e8"></span>☽ sub-lunar (moon overhead)</span>
+      <span><span class="legend-swatch" style="background:#1a1a30"></span>night side</span>
+      <span><span class="legend-swatch" style="background:#ff4444"></span>upcoming solar eclipse</span>
+      <span style="color:#666">— — moon-above-horizon boundary</span>
+    </div>
+  </div>
+
+  <!-- Per-eclipse standalone path maps for the next 2 years. The grid is
+       populated dynamically from astroState._upcomingEclipses. -->
+  <div class="eclipse-maps-section">
+    <div class="card-title eclipse-maps-section-title">upcoming solar eclipse paths · next 2 years</div>
+    <div class="eclipse-maps-grid" id="eclipse-maps">
+      <div class="eclipse-maps-placeholder">computing eclipse paths…</div>
+    </div>
+  </div>
+
+  <div class="footer-strip">
+    <div class="drift-panel">
+      <div class="drift-title">accumulated drift from reality</div>
+      <div class="drift-value" id="drift-value">measuring...</div>
+      <div class="drift-rate" id="drift-rate"></div>
+      <div class="drift-meta" id="drift-meta"></div>
+    </div>
+    <div class="boot-mode" id="boot-mode"></div>
+    <div class="epoch-bar"><span class="pulse"></span><span id="epoch-bar-text"></span></div>
+  </div>
+</div>
+
+<!-- Full-precision astronomical series, loaded as separate files for readability.
+     vsop87_data.js  → ~1.5 MB, full VSOP87B (35,080 terms) for the 8 major planets
+     ElpMpp02LLR_min.js → ~2.6 MB, full ELP/MPP02 LLR (35,901 terms) for the Moon
+     world_land.js   → 70 KB, Natural Earth 1:110m landmass for the world map -->
+<script src="vsop87_data.js"></script>
+<script src="ElpMpp02LLR_min.js"></script>
+<script src="world_land.js"></script>
+
+<script>
+// ============================================================
+// FIRST PRINCIPLES CLOCK — PERSISTENT DRIFT EDITION
+// ============================================================
+// The system clock is touched ONCE IN HISTORY — the very first
+// time this page loads on this machine. That anchor is persisted
+// to localStorage. Every subsequent boot free-runs from the
+// stored anchor, accumulating real drift you can watch diverge.
+//
+// The "drift from reality" display compares our free-running
+// clock against what the system clock says NOW — making the
+// philosophical point visceral: without periodic correction
+// from atomic clocks (NTP), local oscillators wander.
+// ============================================================
+
+const STORAGE_KEY = 'first-principles-clock';
+
+// --- BOOT LOGIC: persist or recover the anchor ---
+let ANCHOR_UNIX_MS, ANCHOR_PERF_MS, BOOT_MODE, FIRST_ANCHOR_TIME, SESSION_COUNT;
+
+const stored = localStorage.getItem(STORAGE_KEY);
+if (stored) {
+  const state = JSON.parse(stored);
+  // We know the time at the LAST session's anchor, and how much
+  // monotonic time had elapsed in that session when it was saved.
+  // But we have NO idea how long the machine was off.
+  // So our "first principles" time is: original anchor + all
+  // monotonic time we've ever measured. The gap while off is LOST.
+  // This is the honest version: time we can't measure doesn't exist to us.
+  ANCHOR_UNIX_MS = state.anchorUnixMs;
+  ANCHOR_PERF_MS = performance.now() - state.elapsedAtSave;
+  FIRST_ANCHOR_TIME = state.firstAnchorTime;
+  SESSION_COUNT = state.sessionCount + 1;
+  BOOT_MODE = 'persisted';
+} else {
+  // First time ever — touch the system clock ONCE
+  ANCHOR_UNIX_MS = Date.now();
+  ANCHOR_PERF_MS = performance.now();
+  FIRST_ANCHOR_TIME = ANCHOR_UNIX_MS;
+  SESSION_COUNT = 1;
+  BOOT_MODE = 'fresh';
+}
+
+// Persist state periodically so we can survive page closes
+function persistState() {
+  const elapsed = performance.now() - ANCHOR_PERF_MS;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    anchorUnixMs: ANCHOR_UNIX_MS,
+    elapsedAtSave: elapsed,
+    firstAnchorTime: FIRST_ANCHOR_TIME,
+    sessionCount: SESSION_COUNT
+  }));
+}
+setInterval(persistState, 1000);
+window.addEventListener('beforeunload', persistState);
+
+// --- CONSTANTS ---
+const SECONDS_PER_MINUTE = 60;
+const SECONDS_PER_HOUR = 3600;
+const SECONDS_PER_DAY = 86400;
+const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const MONTH_NAMES = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December'];
+const DAY_NAMES = ['Thursday','Friday','Saturday','Sunday',
+                   'Monday','Tuesday','Wednesday'];
+
+// --- LEAP YEAR (Gregorian rules) ---
+function isLeapYear(y) {
+  if (y % 400 === 0) return true;
+  if (y % 100 === 0) return false;
+  return y % 4 === 0;
+}
+
+function daysInYear(y) { return isLeapYear(y) ? 366 : 365; }
+
+function daysInMonth(month, year) {
+  if (month === 1 && isLeapYear(year)) return 29;
+  return DAYS_IN_MONTH[month];
+}
+
+// --- CORE: unix ms → calendar ---
+function unixMsToComponents(unixMs) {
+  let totalSeconds = unixMs / 1000;
+  let totalDays = Math.floor(totalSeconds / SECONDS_PER_DAY);
+  let remainingSeconds = totalSeconds - totalDays * SECONDS_PER_DAY;
+
+  if (remainingSeconds < 0) {
+    totalDays -= 1;
+    remainingSeconds += SECONDS_PER_DAY;
+  }
+
+  let hours = Math.floor(remainingSeconds / SECONDS_PER_HOUR);
+  remainingSeconds -= hours * SECONDS_PER_HOUR;
+  let minutes = Math.floor(remainingSeconds / SECONDS_PER_MINUTE);
+  remainingSeconds -= minutes * SECONDS_PER_MINUTE;
+  let seconds = Math.floor(remainingSeconds);
+  let milliseconds = Math.round((remainingSeconds - seconds) * 1000);
+
+  let dayOfWeek = ((totalDays % 7) + 7) % 7;
+
+  let year = 1970;
+  let remaining = totalDays;
+
+  if (remaining >= 0) {
+    while (remaining >= daysInYear(year)) {
+      remaining -= daysInYear(year);
+      year++;
+    }
+  } else {
+    while (remaining < 0) {
+      year--;
+      remaining += daysInYear(year);
+    }
+  }
+
+  let month = 0;
+  while (remaining >= daysInMonth(month, year)) {
+    remaining -= daysInMonth(month, year);
+    month++;
+  }
+  let day = remaining + 1;
+
+  return { year, month, day, hours, minutes, seconds, milliseconds, dayOfWeek, totalDays };
+}
+
+// --- TIMEZONE (captured once — one concession to locality) ---
+const TZ_OFFSET_MINUTES = -(new Date().getTimezoneOffset());
+const TZ_OFFSET_MS = TZ_OFFSET_MINUTES * 60 * 1000;
+
+function tzName() {
+  let h = Math.floor(Math.abs(TZ_OFFSET_MINUTES) / 60);
+  let m = Math.abs(TZ_OFFSET_MINUTES) % 60;
+  let sign = TZ_OFFSET_MINUTES >= 0 ? '+' : '-';
+  return `UTC${sign}${pad(h)}:${pad(m)}`;
+}
+
+// --- UTILITIES ---
+function pad(n, w = 2) {
+  let s = String(Math.floor(n));
+  while (s.length < w) s = '0' + s;
+  return s;
+}
+
+function formatDrift(ms) {
+  const abs = Math.abs(ms);
+  if (abs < 1000) return `${ms.toFixed(1)}ms`;
+  if (abs < 60000) return `${(ms / 1000).toFixed(3)}s`;
+  if (abs < 3600000) return `${(ms / 60000).toFixed(2)} min`;
+  return `${(ms / 3600000).toFixed(3)} hrs`;
+}
+
+// --- RENDERING ---
+function buildClockFace() {
+  const face = document.getElementById('clock-face');
+  // 60 ticks (5 major every 5)
+  for (let i = 0; i < 60; i++) {
+    const tick = document.createElement('div');
+    tick.className = 'tick' + (i % 5 === 0 ? ' major' : '');
+    tick.style.transform = `rotate(${i * 6}deg)`;
+    face.appendChild(tick);
+  }
+  // Only 4 cardinal numerals (12, 3, 6, 9) — anything more is illegible at 180px
+  const cardinals = [12, 3, 6, 9];
+  const center = 90; // half of 180px face
+  const numRadius = 68;
+  for (const h of cardinals) {
+    const num = document.createElement('div');
+    num.className = 'hour-num';
+    const angle = (h * 30 - 90) * Math.PI / 180;
+    num.style.left = (center + numRadius * Math.cos(angle) - 8) + 'px';
+    num.style.top = (center + numRadius * Math.sin(angle) - 6) + 'px';
+    num.textContent = h;
+    face.appendChild(num);
+  }
+}
+
+function render() {
+  const elapsed = performance.now() - ANCHOR_PERF_MS;
+  const ourUnixMs = ANCHOR_UNIX_MS + elapsed;
+  const localMs = ourUnixMs + TZ_OFFSET_MS;
+
+  const t = unixMsToComponents(localMs);
+  const fractionalSecond = (t.milliseconds / 1000);
+
+  // Analog hands
+  const secondAngle = (t.seconds + fractionalSecond) * 6;
+  const minuteAngle = (t.minutes + t.seconds / 60) * 6;
+  const hourAngle = ((t.hours % 12) + t.minutes / 60) * 30;
+
+  document.getElementById('hand-second').style.transform = `rotate(${secondAngle}deg)`;
+  document.getElementById('hand-minute').style.transform = `rotate(${minuteAngle}deg)`;
+  document.getElementById('hand-hour').style.transform = `rotate(${hourAngle}deg)`;
+
+  // Glow dot: opacity ramps 0→1 over one second
+  const glowDot = document.getElementById('glow-dot');
+  const secondFraction = t.milliseconds / 1000;
+  glowDot.style.opacity = 0.05 + secondFraction * 0.95;
+  glowDot.style.boxShadow = `0 0 ${4 + secondFraction * 16}px rgba(255, 68, 68, ${secondFraction * 0.8})`;
+
+  // 10 dots: light up in sequence, one every 100ms
+  const tenthsLit = Math.floor(t.milliseconds / 100);
+  for (let i = 0; i < 10; i++) {
+    tenthDots[i].className = 'dot' + (i <= tenthsLit ? ' lit' : '');
+  }
+
+  // 100 dots: light up in sequence, one every 10ms
+  const hundredthsLit = Math.floor(t.milliseconds / 10);
+  for (let i = 0; i < 100; i++) {
+    hundredthDots[i].className = 'dot' + (i <= hundredthsLit ? ' lit' : '');
+  }
+
+  document.getElementById('digital').innerHTML =
+    `${pad(t.hours)}:${pad(t.minutes)}:<span class="seconds">${pad(t.seconds)}</span><span class="ms">.${pad(t.milliseconds, 3)}</span>`;
+
+  document.getElementById('date-display').textContent =
+    `${t.day} ${MONTH_NAMES[t.month]} ${t.year}`;
+  document.getElementById('day-name').textContent = DAY_NAMES[t.dayOfWeek];
+
+  // --- DRIFT: compare our free-running time against system reality ---
+  // This is the ONLY ongoing use of Date.now() — purely for display,
+  // never fed back into the clock. It's the "control group."
+  const realityMs = Date.now();
+  const driftMs = ourUnixMs - realityMs;
+  const driftEl = document.getElementById('drift-value');
+  driftEl.textContent = formatDrift(driftMs);
+  driftEl.className = 'drift-value' + (Math.abs(driftMs) < 50 ? ' synced' : '');
+
+  // Drift rate (how fast we're diverging per hour of runtime)
+  const runtimeHours = elapsed / 3600000;
+  if (runtimeHours > 0.001) {
+    const ppm = (driftMs / elapsed) * 1e6;
+    document.getElementById('drift-rate').textContent =
+      `${ppm.toFixed(2)} ppm · ${(driftMs / runtimeHours).toFixed(1)} ms/hr`;
+  }
+
+  // Time since the original anchor was set
+  const ageSinceFirstAnchor = realityMs - FIRST_ANCHOR_TIME;
+  const ageStr = ageSinceFirstAnchor < 60000 ? `${(ageSinceFirstAnchor/1000).toFixed(0)}s ago`
+    : ageSinceFirstAnchor < 3600000 ? `${(ageSinceFirstAnchor/60000).toFixed(1)} min ago`
+    : ageSinceFirstAnchor < 86400000 ? `${(ageSinceFirstAnchor/3600000).toFixed(1)} hrs ago`
+    : `${(ageSinceFirstAnchor/86400000).toFixed(1)} days ago`;
+
+  document.getElementById('drift-meta').textContent =
+    `original anchor set ${ageStr} · session ${SESSION_COUNT} · `
+    + (BOOT_MODE === 'fresh' ? 'system clock touched THIS boot' : 'running from stored anchor (no system clock)');
+
+  // Info panel — day% and year% at centisecond resolution
+  const dayOfYear = totalDayOfYear(t.day, t.month, t.year);
+  const preciseSecondsInDay = t.hours * 3600 + t.minutes * 60 + t.seconds + t.milliseconds / 1000;
+  const dayProgress = (preciseSecondsInDay / SECONDS_PER_DAY * 100).toFixed(4);
+  const preciseDayFraction = (dayOfYear - 1 + preciseSecondsInDay / SECONDS_PER_DAY) / daysInYear(t.year);
+  const yearProgress = (preciseDayFraction * 100).toFixed(5);
+
+  // --- ASTRONOMICAL UPDATE ---
+  // Compute Julian Day from our current Unix ms and run the engine.
+  // The astro engine throttles itself internally to ~1 Hz (planets don't
+  // visibly move at 60fps). The world map's sub-solar / sub-lunar markers
+  // update every render frame so the displayed coordinates tick smoothly
+  // at the trailing-digit level (GMST advances 0.0042°/sec).
+  const currentJD = jdFromUnixMs(ourUnixMs);
+  astroUpdate(currentJD);
+  updateWorldMapDynamic(astroState, currentJD);
+
+  // Build astronomical info row (only show if we have state)
+  let astroInfo = '';
+  if (astroState && astroState.moon) {
+    const moonDistEl = document.getElementById('moon-distance');
+    if (moonDistEl) {
+      moonDistEl.textContent = `${astroState.moon.dist.toFixed(0)} km · elong ${astroState.phase.elongDeg.toFixed(1)}°`;
+    }
+    astroInfo = `
+      <span class="label">earth–sun</span><span class="value">${(astroState.planets.earth.r).toFixed(6)} AU</span>
+      <span class="label">earth–moon</span><span class="value">${(astroState.moon.dist).toFixed(0)} km</span>
+      <span class="label">jupiter</span><span class="value">${astroState.planets.jupiter.lon.toFixed(2)}° / ${astroState.planets.jupiter.r.toFixed(3)} AU</span>
+      <span class="label">ΔT (TT−UT)</span><span class="value">${astroState.dT.toFixed(1)}s</span>
+    `;
+  }
+
+  document.getElementById('info-panel').innerHTML = `
+    <span class="label">our unix epoch</span><span class="value">${Math.floor(ourUnixMs / 1000)}</span>
+    <span class="label">monotonic Δ</span><span class="value">${(elapsed / 1000).toFixed(3)}s</span>
+    <span class="label">timezone</span><span class="value">${tzName()}</span>
+    <span class="label">leap year</span><span class="value">${isLeapYear(t.year) ? 'yes' : 'no'}</span>
+    <span class="label">day of year</span><span class="value">${dayOfYear} / ${daysInYear(t.year)}</span>
+    <span class="label">year progress</span><span class="value">${yearProgress}%</span>
+    <span class="label">day progress</span><span class="value">${dayProgress}%</span>
+    <span class="label">julian day</span><span class="value">${currentJD.toFixed(5)}</span>
+    ${astroInfo}
+  `;
+
+  const bootModeEl = document.getElementById('boot-mode');
+  if (BOOT_MODE === 'fresh') {
+    bootModeEl.className = 'boot-mode fresh';
+    bootModeEl.textContent = '● first boot — system clock anchor captured';
+  } else {
+    bootModeEl.className = 'boot-mode persisted';
+    bootModeEl.textContent = `● session ${SESSION_COUNT} — free-running from stored anchor (time gap while off is lost forever)`;
+  }
+
+  document.getElementById('epoch-bar-text').textContent =
+    `anchor: unix ${ANCHOR_UNIX_MS} · system clock touched once in history · drift is real`;
+
+  requestAnimationFrame(render);
+}
+
+function totalDayOfYear(day, month, year) {
+  let d = 0;
+  for (let m = 0; m < month; m++) d += daysInMonth(m, year);
+  return d + day;
+}
+
+function julianDay(y, m, d, h, min, s) {
+  if (m <= 2) { y -= 1; m += 12; }
+  const A = Math.floor(y / 100);
+  const B = 2 - A + Math.floor(A / 4);
+  const JD = Math.floor(365.25 * (y + 4716)) +
+             Math.floor(30.6001 * (m + 1)) +
+             d + B - 1524.5 +
+             (h + min / 60 + s / 3600) / 24;
+  return JD.toFixed(5);
+}
+
+// ============================================================
+// ASTRONOMICAL ENGINE — first principles
+// ============================================================
+// All planetary positions, lunar phase, and eclipses are computed
+// from pure mathematics: Keplerian orbital mechanics, ELP-style
+// periodic series, Laskar's secular frequencies. Zero data files,
+// zero network, zero system calls beyond the monotonic counter.
+// ============================================================
+
+// --- TIME CONVERSIONS for astronomy ---
+const J2000_JD = 2451545.0;
+const SECONDS_PER_JULIAN_CENTURY = 3155760000;
+
+function jdFromUnixMs(unixMs) {
+  return 2440587.5 + unixMs / 86400000.0;
+}
+
+function julianCenturiesFromJD(jd) {
+  return (jd - J2000_JD) / 36525.0;
+}
+
+// Delta-T (TT - UT1): how dynamical time differs from civil time.
+// Polynomial from Espenak & Meeus (2006) for historical/near-current,
+// parabolic extrapolation for deep time (real physical effect — Earth
+// rotation slows due to lunar tidal friction).
+function deltaT(year) {
+  const u = (year - 2000) / 100;
+  if (year >= 2005 && year <= 2050) {
+    return 62.92 + 0.32217 * (year - 2000) + 0.005589 * (year - 2000) ** 2;
+  }
+  if (year >= 1986 && year < 2005) {
+    const t = year - 2000;
+    return 63.86 + 0.3345 * t - 0.060374 * t * t + 0.0017275 * t ** 3 + 0.000651814 * t ** 4 + 0.00002373599 * t ** 5;
+  }
+  if (year >= 1900 && year < 1986) {
+    const t = (year - 1900) / 100;
+    return -2.79 + 149.4119 * t - 598.939 * t * t + 6196.6 * t ** 3 - 19700 * t ** 4;
+  }
+  if (year > 2050 && year <= 2150) {
+    return -20 + 32 * Math.pow((year - 1820) / 100, 2) - 0.5628 * (2150 - year);
+  }
+  // Deep time extrapolation (Espenak-Meeus parabolic model)
+  const u1 = (year - 1820) / 100;
+  return -20 + 32 * u1 * u1;
+}
+
+// Wrap angle to [0, 360)
+function wrapDeg(x) {
+  x = x % 360;
+  if (x < 0) x += 360;
+  return x;
+}
+
+function wrapDegPM(x) {
+  x = ((x + 180) % 360 + 360) % 360 - 180;
+  return x;
+}
+
+const D2R = Math.PI / 180;
+const R2D = 180 / Math.PI;
+
+// ============================================================
+// KEPLER'S EQUATION SOLVER
+// E - e·sin(E) = M, solved by Newton-Raphson to 10⁻¹² radians
+// (sub-milliarcsecond precision)
+// ============================================================
+function solveKepler(M, e) {
+  // M and result in RADIANS
+  // Danby's starter for fast convergence
+  let E = M + e * Math.sin(M) * (1 + e * Math.cos(M));
+  for (let i = 0; i < 30; i++) {
+    const f = E - e * Math.sin(E) - M;
+    const fp = 1 - e * Math.cos(E);
+    const dE = -f / fp;
+    E += dE;
+    if (Math.abs(dE) < 1e-12) break;
+  }
+  return E;
+}
+
+// ============================================================
+// JPL KEPLERIAN ELEMENTS — Standish & Williams (2014)
+// Table 2a: valid 3000 BC to 3000 AD
+// [a0, adot, e0, edot, I0, Idot, L0, Ldot, wbar0, wbardot, Om0, Omdot]
+// Units: a [au, au/Cy], e [/, /Cy], I,L,wbar,Om [deg, deg/Cy]
+// ============================================================
+const PLANET_ELEMENTS = {
+  mercury: [0.38709843, 0.00000000, 0.20563661, 0.00002123, 7.00559432, -0.00590158, 252.25166724, 149472.67486623, 77.45771895, 0.15940013, 48.33961819, -0.12214182],
+  venus:   [0.72332102, -0.00000026, 0.00676399, -0.00005107, 3.39777545, 0.00043494, 181.97970850, 58517.81560260, 131.76755713, 0.05679648, 76.67261496, -0.27274174],
+  earth:   [1.00000018, -0.00000003, 0.01673163, -0.00003661, -0.00054346, -0.01337178, 100.46691572, 35999.37306329, 102.93005885, 0.31795260, -5.11260389, -0.24123856],
+  mars:    [1.52371243, 0.00000097, 0.09336511, 0.00009149, 1.85181869, -0.00724757, -4.56813164, 19140.29934243, -23.91744784, 0.45223625, 49.71320984, -0.26852431],
+  jupiter: [5.20248019, -0.00002864, 0.04853590, 0.00018026, 1.29861416, -0.00322699, 34.33479152, 3034.90371757, 14.27495244, 0.18199196, 100.29282654, 0.13024619],
+  saturn:  [9.54149883, -0.00003065, 0.05550825, -0.00032044, 2.49424102, 0.00451969, 50.07571329, 1222.11494724, 92.86136063, 0.54179478, 113.63998702, -0.25015002],
+  uranus:  [19.18797948, -0.00020455, 0.04685740, -0.00001550, 0.77298127, -0.00180155, 314.20276625, 428.49512595, 172.43404441, 0.09266985, 73.96250215, 0.05739699],
+  neptune: [30.06952752, 0.00006447, 0.00895439, 0.00000818, 1.77005520, 0.00022400, 304.22289287, 218.46515314, 46.68158724, 0.01009938, 131.78635853, -0.00606302],
+  pluto:   [39.48686035, 0.00449751, 0.24885238, 0.00006016, 17.14104260, 0.00000501, 238.96535011, 145.18042903, 224.09702598, -0.00968827, 110.30167986, -0.00809981]
+};
+
+// Table 2b: extra terms in Mean Anomaly for outer planets [b, c, s, f]
+const PLANET_PERTURBATIONS = {
+  jupiter: [-0.00012452, 0.06064060, -0.35635438, 38.35125000],
+  saturn:  [0.00025899, -0.13434469, 0.87320147, 38.35125000],
+  uranus:  [0.00058331, -0.97731848, 0.17689245, 7.67025000],
+  neptune: [-0.00041348, 0.68346318, -0.10162547, 7.67025000],
+  pluto:   [-0.01262724, 0.0, 0.0, 0.0]
+};
+
+// Body display info for the orrery
+// Inner planets cluster tightly under log spacing — abbreviate their labels
+// to 3 chars so they don't pile up. Outer planets get more pixel room so
+// they keep full names. labelOffset is extra radial push from the planet dot.
+const PLANET_INFO = [
+  { key: 'mercury', name: 'Mer', color: '#a0a0a0', radiusPx: 2.5, labelOffset: 18 },
+  { key: 'venus',   name: 'Ven', color: '#e0c068', radiusPx: 4.0, labelOffset: 14 },
+  { key: 'earth',   name: 'Ear', color: '#5588dd', radiusPx: 4.5, labelOffset: 14 },
+  { key: 'mars',    name: 'Mar', color: '#cc5544', radiusPx: 3.5, labelOffset: 14 },
+  { key: 'jupiter', name: 'Jupiter', color: '#d4a878', radiusPx: 8.0, labelOffset: 14 },
+  { key: 'saturn',  name: 'Saturn',  color: '#e6cc99', radiusPx: 7.0, labelOffset: 14 },
+  { key: 'uranus',  name: 'Uranus',  color: '#88cccc', radiusPx: 5.5, labelOffset: 14 },
+  { key: 'neptune', name: 'Neptune', color: '#5566cc', radiusPx: 5.5, labelOffset: 14 },
+  { key: 'pluto',   name: 'Pluto',   color: '#aa9988', radiusPx: 2.0, labelOffset: 12 }
+];
+
+// ============================================================
+// LASKAR SECULAR FREQUENCIES (La2004, Table 6)
+// Used for deep-time eccentricity/inclination modulation.
+// Units: arcsec / year → convert to rad / Julian century
+// ============================================================
+const ARCSEC_PER_YEAR_TO_RAD_PER_CY = (Math.PI / (180 * 3600)) * 100;
+const G_FREQ = [5.59, 7.452, 17.368, 17.916, 4.257452, 28.245, 3.087951, 0.673021]
+  .map(v => v * ARCSEC_PER_YEAR_TO_RAD_PER_CY);
+const S_FREQ = [-5.59, -7.05, -18.85, -17.755, 0, -26.347855, -2.9925259, -0.691736]
+  .map(v => v * ARCSEC_PER_YEAR_TO_RAD_PER_CY);
+
+// The dominant 405-kyr Earth eccentricity cycle: g2 - g5 = 3.200"/yr
+// (Laskar's "most stable feature of the solar system")
+const G2_MINUS_G5_RAD_PER_CY = (G_FREQ[1] - G_FREQ[4]);
+
+// ============================================================
+// VSOP87B EVALUATOR
+// Computes heliocentric ecliptic spherical coordinates (L, B, R)
+// at mean equinox J2000 from the full VSOP87B series.
+//
+// Each variable is a Poisson series:
+//   var = Σ_n  t^n · Σ_i  A_ni · cos(B_ni + C_ni · t)
+// where t is Julian millennia from J2000.
+//
+// DEEP-TIME STABILITY: VSOP87 is rigorously valid for ±4 millennia.
+// Beyond that, the t^n polynomial multiplier diverges for n≥2.
+// The fix: clamp the polynomial multiplier (not the periodic phase)
+// for n≥2, which preserves mean motion (T^0+T^1) while suppressing
+// runaway secular terms. The Sun's gravity hasn't changed; the
+// truncated theory's polynomial extrapolation is the issue.
+// ============================================================
+const VSOP_T_CLAMP_MILLENNIA = 4; // VSOP87 nominal validity ±4 kyr
+
+function evalVSOP(planetKey, varName, t) {
+  const series = VSOP87[planetKey] && VSOP87[planetKey][varName];
+  if (!series) return 0;
+  const tClamp = Math.max(-VSOP_T_CLAMP_MILLENNIA, Math.min(VSOP_T_CLAMP_MILLENNIA, t));
+  let total = 0;
+  let polyMult;
+  for (let n = 0; n < series.length; n++) {
+    let s = 0;
+    const terms = series[n];
+    for (let i = 0; i < terms.length; i++) {
+      const term = terms[i];
+      // C·t uses ACTUAL t — these are physical orbital frequencies
+      s += term[0] * Math.cos(term[1] + term[2] * t);
+    }
+    if (n === 0) polyMult = 1;
+    else if (n === 1) polyMult = t;          // mean motion: keep unbounded
+    else polyMult = Math.pow(tClamp, n);     // higher-order: clamp extrapolation
+    total += polyMult * s;
+  }
+  return total;
+}
+
+// ============================================================
+// PLANET POSITION COMPUTER
+// Mercury–Neptune: full VSOP87B series → sub-arcsec accuracy ±4 kyr,
+//   gracefully degrading beyond (clamped polynomial extrapolation).
+// Pluto: JPL Keplerian elements with secular modulation (VSOP87
+//   doesn't include Pluto; it isn't a major-perturber planet anyway).
+// Returns { x, y, z, r, lon, lat } heliocentric ecliptic J2000, AU.
+// ============================================================
+const JULIAN_MILLENNIA_PER_CENTURY = 0.1;
+
+function computePlanetPosVSOP(planetKey, T) {
+  const t = T * JULIAN_MILLENNIA_PER_CENTURY; // millennia from J2000
+
+  const L = evalVSOP(planetKey, 'L', t); // radians
+  const B = evalVSOP(planetKey, 'B', t); // radians
+  const R = evalVSOP(planetKey, 'R', t); // AU
+
+  const cosB = Math.cos(B);
+  const x = R * cosB * Math.cos(L);
+  const y = R * cosB * Math.sin(L);
+  const z = R * Math.sin(B);
+  const r = R; // already the geometric distance
+
+  return {
+    x, y, z, r,
+    lon: wrapDeg(L * R2D),
+    lat: B * R2D,
+    a: R, e: 0, I: B * R2D // a/e/I are unused for VSOP path; kept for API
+  };
+}
+
+function computePlanetPosKeplerian(planetKey, T) {
+  const el = PLANET_ELEMENTS[planetKey];
+  let a = el[0] + el[1] * T;
+  let e = el[2] + el[3] * T;
+  let I = el[4] + el[5] * T;
+  let L = el[6] + el[7] * T;
+  let wbar = el[8] + el[9] * T;
+  let Om = el[10] + el[11] * T;
+
+  // Deep-time secular modulation for Pluto (Laskar-style breathing)
+  if (Math.abs(T) > 30) {
+    const eAmp = Math.max(0.005, el[2] * 0.4);
+    e += eAmp * Math.cos(G_FREQ[7] * T + 0.7) * 0.3;
+    e = Math.max(0.0001, Math.min(0.95, e));
+    I += Math.max(0.5, el[4] * 0.3) * Math.cos(S_FREQ[7] * T + 0.5) * 0.2;
+  }
+
+  const omega = wbar - Om;
+  let M = L - wbar;
+  if (PLANET_PERTURBATIONS[planetKey]) {
+    const [b, c, s, f] = PLANET_PERTURBATIONS[planetKey];
+    M += b * T * T + c * Math.cos(f * T * D2R) + s * Math.sin(f * T * D2R);
+  }
+  M = wrapDegPM(M);
+
+  const E = solveKepler(M * D2R, e);
+  const xp = a * (Math.cos(E) - e);
+  const yp = a * Math.sqrt(1 - e * e) * Math.sin(E);
+
+  const cw = Math.cos(omega * D2R), sw = Math.sin(omega * D2R);
+  const cO = Math.cos(Om * D2R), sO = Math.sin(Om * D2R);
+  const cI = Math.cos(I * D2R), sI = Math.sin(I * D2R);
+
+  const x = (cw * cO - sw * sO * cI) * xp + (-sw * cO - cw * sO * cI) * yp;
+  const y = (cw * sO + sw * cO * cI) * xp + (-sw * sO + cw * cO * cI) * yp;
+  const z = (sw * sI) * xp + (cw * sI) * yp;
+  const r = Math.sqrt(x * x + y * y + z * z);
+
+  return {
+    x, y, z, r,
+    lon: wrapDeg(Math.atan2(y, x) * R2D),
+    lat: Math.asin(z / r) * R2D,
+    a, e, I
+  };
+}
+
+function computePlanetPos(planetKey, T) {
+  // VSOP87B covers Mercury through Neptune. Pluto falls back to Keplerian.
+  if (typeof VSOP87 !== 'undefined' && VSOP87[planetKey]) {
+    return computePlanetPosVSOP(planetKey, T);
+  }
+  return computePlanetPosKeplerian(planetKey, T);
+}
+
+// ============================================================
+// LUNAR POSITION — ELP/MPP02 LLR (full series, 35,901 terms)
+//
+// Source: Chapront & Francou 2003, A&A 404, 735
+//   "The Lunar Theory ELP Revisited. Introduction of New
+//    Planetary Perturbations"
+// JS port: ytliu0/ElpMpp02 (LLR-fit constants, full precision).
+//
+// getX2000_LLR(T) returns geocentric Cartesian {X, Y, Z, rGeo}
+// in km, referred to the dynamical mean ecliptic and equinox
+// of J2000 — exactly the frame VSOP87B uses, so no rotation.
+//
+// We convert to (lon, lat, dist) for the existing phase/eclipse
+// pipeline. Accuracy: <0.1″ over ±5 millennia from J2000,
+// gracefully degrading thereafter.
+// ============================================================
+function moonPosition(T) {
+  if (typeof getX2000_LLR !== 'function') {
+    // ELP data not loaded — should not happen in normal operation
+    console.warn('ELP/MPP02 unavailable');
+    return { lon: 0, lat: 0, dist: 384400, args: null };
+  }
+  const xyz = getX2000_LLR(T);
+  const X = xyz.X, Y = xyz.Y, Z = xyz.Z;
+  const dist = xyz.rGeo; // km
+  const rxy = Math.sqrt(X * X + Y * Y);
+  const lon = wrapDeg(Math.atan2(Y, X) * R2D);
+  const lat = Math.atan2(Z, rxy) * R2D;
+  return { lon, lat, dist };
+}
+
+
+// ============================================================
+// SOLAR POSITION (geocentric apparent)
+// Sun longitude = Earth heliocentric longitude + 180°
+// Includes nutation in longitude and aberration corrections.
+// ============================================================
+function sunPosition(T, earthPos) {
+  // Earth heliocentric → Sun geocentric (just flip)
+  const sunLonHelio = wrapDeg(earthPos.lon + 180);
+  const sunLatHelio = -earthPos.lat;
+
+  // Aberration of light: Sun appears 20.4955" earlier in longitude
+  // due to Earth's motion. Magnitude ~ 8.794" / R [AU].
+  const aberration = -20.4955 / 3600;
+
+  // Nutation in longitude (largest term)
+  const Omega = 125.04452 - 1934.136261 * T;
+  const L_sun_mean = 280.4665 + 36000.7698 * T;
+  const L_moon_mean = 218.3165 + 481267.8813 * T;
+  const dPsi = (-17.20 * Math.sin(Omega * D2R)
+    - 1.32 * Math.sin(2 * L_sun_mean * D2R)
+    - 0.23 * Math.sin(2 * L_moon_mean * D2R)
+    + 0.21 * Math.sin(2 * Omega * D2R)) / 3600;
+
+  const sunLonApparent = wrapDeg(sunLonHelio + dPsi + aberration);
+
+  return {
+    lon: sunLonApparent,
+    lat: sunLatHelio,
+    dist: earthPos.r, // Earth-Sun distance in AU
+    nutation: dPsi,
+    omegaNode: wrapDeg(Omega)
+  };
+}
+
+// ============================================================
+// MEAN OBLIQUITY OF THE ECLIPTIC (IAU 2006)
+// ============================================================
+function meanObliquity(T) {
+  // Returns degrees
+  const epsilonArcsec = 84381.406
+    - T * (46.836769
+    + T * (0.0001831
+    - T * (0.00200340
+    - T * (0.000000576
+    + T * 0.0000000434))));
+  return epsilonArcsec / 3600;
+}
+
+// ============================================================
+// EARTH ROTATION & SUBSOLAR POINT
+// Where on Earth is the Sun directly overhead?
+//   - subsolar latitude  = solar declination δ
+//   - subsolar longitude = α_sun − GMST  (normalized to [-180°,+180°])
+// All "from first principles" given the sun's geocentric ecliptic
+// longitude/latitude and the obliquity of the ecliptic.
+// ============================================================
+
+// Greenwich Mean Sidereal Time (degrees), high-precision IAU expression.
+// jd is UT1 (we feed it the UT1 jd; the sun's RA is computed from TT-based T,
+// which differs by ΔT ~75s — small enough that we don't bother correcting).
+function gmstDeg(jdUT) {
+  const d = jdUT - J2000_JD;
+  const T = d / 36525;
+  // Capitaine et al. 2003; Aoki 1982 formulation
+  let g = 280.46061837
+        + 360.98564736629 * d
+        + 0.000387933 * T * T
+        - T * T * T / 38710000;
+  return wrapDeg(g);
+}
+
+// Convert geocentric ecliptic (λ, β) → equatorial (α, δ) in degrees,
+// rotating about the x-axis by the obliquity ε.
+function eclipticToEquatorial(lonDeg, latDeg, oblDeg) {
+  const L = lonDeg * D2R;
+  const B = latDeg * D2R;
+  const E = oblDeg * D2R;
+  const sinDec = Math.sin(B) * Math.cos(E) + Math.cos(B) * Math.sin(E) * Math.sin(L);
+  const dec = Math.asin(sinDec);
+  const ra = Math.atan2(
+    Math.sin(L) * Math.cos(E) - Math.tan(B) * Math.sin(E),
+    Math.cos(L)
+  );
+  return { ra: wrapDeg(ra * R2D), dec: dec * R2D };
+}
+
+// VSOP87B / ELP-MPP02 deliver J2000 ecliptic coordinates. To compare against
+// GMST (which is referred to the equator/equinox of date) we must precess from
+// J2000 to date. IAU 2006 general precession in longitude:
+//   p_A = 5028.79695″·T + 1.105414″·T²  (T = centuries TT from J2000)
+function precessJ2000LonToDate(lonJ2000, T) {
+  const pA_deg = (5028.79695 * T + 1.105414 * T * T) / 3600;
+  return wrapDeg(lonJ2000 + pA_deg);
+}
+
+// Sun-overhead geographic coordinates at time jdUT.
+// Returns { lat, lon } in degrees with lon ∈ [-180, +180].
+function subsolarPoint(jdUT, sun, T) {
+  const lonDate = precessJ2000LonToDate(sun.lon, T);
+  const epsilon = meanObliquity(T);
+  const { ra, dec } = eclipticToEquatorial(lonDate, sun.lat, epsilon);
+  const gst = gmstDeg(jdUT);
+  let lon = ra - gst;
+  while (lon > 180) lon -= 360;
+  while (lon < -180) lon += 360;
+  return { lat: dec, lon };
+}
+
+// Sub-LUNAR point — where the Moon is directly overhead at jdUT.
+// Used to plot solar-eclipse track centers (for a solar eclipse, the moon's
+// shadow falls on the dayside near both the subsolar AND sublunar points;
+// they are within a few thousand km of each other near totality).
+function sublunarPoint(jdUT, moon, T) {
+  const lonDate = precessJ2000LonToDate(moon.lon, T);
+  const epsilon = meanObliquity(T);
+  const { ra, dec } = eclipticToEquatorial(lonDate, moon.lat, epsilon);
+  const gst = gmstDeg(jdUT);
+  let lon = ra - gst;
+  while (lon > 180) lon -= 360;
+  while (lon < -180) lon += 360;
+  return { lat: dec, lon };
+}
+
+// ============================================================
+// LUNAR SHADOW GROUND POINT — first-principles eclipse-path geometry
+//
+// Computes the intersection of the Moon's umbral/antumbral cone axis
+// with Earth's surface. Validated against NASA's SE2026Aug12T reference:
+//   computed γ = 0.8972  (NASA: 0.8977)
+//   greatest eclipse: 65.13°N, 26.1°W  (NASA: 65.1°N, 25.4°W)
+//
+// Coordinate pipeline:
+//   1. Both Sun and Moon positions in J2000 ecliptic Cartesian
+//   2. Ray-sphere intersection → hit point H in J2000 ecliptic
+//   3. Rotate H by J2000 obliquity → J2000 equatorial Cartesian
+//   4. Geographic lat = declination, lon = RA + precession − GMST
+//
+// This avoids the lossy spherical-trig round-trip and properly handles
+// the ecliptic-to-equatorial rotation as a single matrix multiply.
+// ============================================================
+const AU_KM = 149597870.7;
+const R_EARTH_KM = 6378.137;
+const EPS_J2000_RAD = 23.4392911 * D2R;  // J2000 mean obliquity
+const COS_EPS0 = Math.cos(EPS_J2000_RAD);
+const SIN_EPS0 = Math.sin(EPS_J2000_RAD);
+
+// Spherical (lon°, lat°, r) → J2000 ecliptic Cartesian
+function _toEclCart(lonDeg, latDeg, r) {
+  const L = lonDeg * D2R, B = latDeg * D2R;
+  const cb = Math.cos(B);
+  return { x: r * cb * Math.cos(L), y: r * cb * Math.sin(L), z: r * Math.sin(B) };
+}
+
+// Returns { gamma, lat, lon } or null if axis misses Earth.
+// gamma = Besselian element γ (perpendicular distance from shadow axis to
+// Earth's center in Earth radii). Minimizing |γ| over time gives "greatest eclipse."
+//
+// jdTT: Julian Date in Terrestrial Time (for orbital positions)
+// jdUT: Julian Date in UT1 (for GMST / Earth rotation)
+// earthPos: heliocentric ecliptic J2000 position of Earth (from VSOP87B)
+// moon: geocentric ecliptic J2000 {lon, lat, dist_km}
+function shadowGroundPoint(jdTT, jdUT, earthPos, moon) {
+  const T = (jdTT - J2000_JD) / 36525;
+
+  // Sun geocentric J2000 ecliptic (raw, no nutation — same frame as Moon)
+  const sunLonJ2000 = wrapDeg(earthPos.lon + 180);
+  const sunLatJ2000 = -earthPos.lat;
+  const sunDist = earthPos.r * AU_KM;
+
+  const M = _toEclCart(moon.lon, moon.lat, moon.dist);
+  const S = _toEclCart(sunLonJ2000, sunLatJ2000, sunDist);
+
+  // Shadow axis unit vector (from Sun through Moon, toward Earth)
+  const dx = M.x - S.x, dy = M.y - S.y, dz = M.z - S.z;
+  const dm = Math.sqrt(dx*dx + dy*dy + dz*dz);
+  const ux = dx / dm, uy = dy / dm, uz = dz / dm;
+
+  // γ = |M × u| / R⊕ (minimum distance from axis to geocenter)
+  const cx = M.y*uz - M.z*uy;
+  const cy = M.z*ux - M.x*uz;
+  const cz = M.x*uy - M.y*ux;
+  const gamma = Math.sqrt(cx*cx + cy*cy + cz*cz) / R_EARTH_KM;
+
+  // Ray-sphere intersection: |M + s·u|² = R⊕²
+  const Mu = M.x*ux + M.y*uy + M.z*uz;
+  const MM = M.x*M.x + M.y*M.y + M.z*M.z;
+  const disc = Mu*Mu - (MM - R_EARTH_KM * R_EARTH_KM);
+  if (disc < 0) return { gamma, hit: false };
+  const s = -Mu - Math.sqrt(disc);
+  if (s < 0) return { gamma, hit: false };
+
+  // Hit point in J2000 ecliptic Cartesian
+  const Hx = M.x + s*ux;
+  const Hy = M.y + s*uy;
+  const Hz = M.z + s*uz;
+
+  // Rotate ecliptic → equatorial (J2000 obliquity, single matrix multiply)
+  const Hx_eq = Hx;
+  const Hy_eq = Hy * COS_EPS0 - Hz * SIN_EPS0;
+  const Hz_eq = Hy * SIN_EPS0 + Hz * COS_EPS0;
+  const r = Math.sqrt(Hx_eq*Hx_eq + Hy_eq*Hy_eq + Hz_eq*Hz_eq);
+
+  // Geographic latitude = declination
+  const geoLat = Math.asin(Hz_eq / r) * R2D;
+
+  // Geographic longitude = RA(of-date) − GMST
+  const raJ2000 = wrapDeg(Math.atan2(Hy_eq, Hx_eq) * R2D);
+  const precRA = 1.3972 * T;  // Lieske 1979: general precession in RA
+  const gst = gmstDeg(jdUT);
+  let geoLon = (raJ2000 + precRA) - gst;
+  while (geoLon > 180) geoLon -= 360;
+  while (geoLon < -180) geoLon += 360;
+
+  return { gamma, hit: true, lat: geoLat, lon: geoLon };
+}
+
+// Trace the shadow path over Earth. Samples the shadow axis intersection
+// at 1-minute intervals around the Meeus syzygy time. Finds the true
+// "greatest eclipse" instant (minimum γ) and annotates it in the output.
+//
+// Returns { track: [{jd, lat, lon}, ...], greatest: {jd, lat, lon, gamma} }
+// or { track: [], greatest: null } for partial-only eclipses.
+function eclipseShadowTrack(eclipseJD) {
+  const HALF_HOURS = 2;
+  const STEP_MIN = 1;
+  const track = [];
+
+  const yrMax = (eclipseJD - J2000_JD) / 365.25 + 2000;
+  const dTsec = deltaT(yrMax);
+  const Tmax = julianCenturiesFromJD(eclipseJD);  // JDE is already TT
+  const earthAtMax = computePlanetPos('earth', Tmax);
+
+  let minGamma = Infinity, greatest = null;
+
+  for (let dt = -HALF_HOURS * 60; dt <= HALF_HOURS * 60; dt += STEP_MIN) {
+    const jdTT = eclipseJD + (dt / 1440);
+    const jdUT = jdTT - dTsec / 86400;
+    const Tlocal = julianCenturiesFromJD(jdTT);
+    const moonAt = moonPosition(Tlocal);
+
+    const res = shadowGroundPoint(jdTT, jdUT, earthAtMax, moonAt);
+    if (res.gamma < minGamma) {
+      minGamma = res.gamma;
+      if (res.hit) greatest = { jd: jdTT, lat: res.lat, lon: res.lon, gamma: res.gamma };
+    }
+    if (res.hit) track.push({ jd: jdTT, lat: res.lat, lon: res.lon });
+  }
+
+  // If no track but gamma was close (partial: axis barely misses), still
+  // compute the ground point using the sublunar fallback.
+  if (!greatest && minGamma < 1.6) {
+    const jdUT = eclipseJD - dTsec / 86400;
+    const moonFallback = moonPosition(Tmax);
+    const sub = sublunarPoint(jdUT, moonFallback, Tmax);
+    greatest = { jd: eclipseJD, lat: sub.lat, lon: sub.lon, gamma: minGamma };
+  }
+
+  return { track, greatest };
+}
+
+// ============================================================
+// MOON PHASE — full 3D geometry
+// Phase angle i = angle Sun-Moon as seen from Earth.
+// Illumination k = (1 + cos i) / 2
+// Position angle of bright limb χ — for terminator orientation
+// ============================================================
+function moonPhase(moon, sun) {
+  const moonLonR = moon.lon * D2R;
+  const moonLatR = moon.lat * D2R;
+  const sunLonR = sun.lon * D2R;
+  const sunLatR = sun.lat * D2R;
+
+  // Geocentric elongation (Sun-Earth-Moon angle)
+  const cosPsi = Math.sin(sunLatR) * Math.sin(moonLatR)
+    + Math.cos(sunLatR) * Math.cos(moonLatR) * Math.cos(sunLonR - moonLonR);
+  const psi = Math.acos(Math.max(-1, Math.min(1, cosPsi)));
+
+  // Phase angle from Earth's perspective
+  // R_sun = sun.dist (AU), Δ_moon = moon.dist (km)
+  // Convert to consistent units
+  const AU_KM = 149597870.7;
+  const Rsun = sun.dist * AU_KM;
+  const dMoon = moon.dist;
+  const phaseAngle = Math.atan2(Rsun * Math.sin(psi), dMoon - Rsun * cosPsi);
+
+  // Illumination fraction
+  const illumination = (1 + Math.cos(phaseAngle)) / 2;
+
+  // Position angle of the bright limb (Meeus 48.5)
+  const dLon = sunLonR - moonLonR;
+  const chi = Math.atan2(
+    Math.cos(sunLatR) * Math.sin(dLon),
+    Math.sin(sunLatR) * Math.cos(moonLatR)
+      - Math.cos(sunLatR) * Math.sin(moonLatR) * Math.cos(dLon)
+  );
+
+  // Determine waxing vs waning by elongation direction
+  let elongDeg = wrapDegPM(moon.lon - sun.lon);
+  // 0 = new, +90 = first quarter, ±180 = full, -90 = last quarter
+  // Waxing: 0 → 180, Waning: 180 → 360 (or -180 → 0)
+  const isWaxing = elongDeg >= 0;
+
+  let phaseName;
+  const phaseDeg = phaseAngle * R2D;
+  if (Math.abs(elongDeg) < 7) phaseName = 'New Moon';
+  else if (Math.abs(elongDeg) > 173) phaseName = 'Full Moon';
+  else if (Math.abs(elongDeg - 90) < 7) phaseName = 'First Quarter';
+  else if (Math.abs(elongDeg + 90) < 7) phaseName = 'Last Quarter';
+  else if (isWaxing && elongDeg < 90) phaseName = 'Waxing Crescent';
+  else if (isWaxing && elongDeg < 180) phaseName = 'Waxing Gibbous';
+  else if (!isWaxing && elongDeg > -90) phaseName = 'Waning Crescent';
+  else phaseName = 'Waning Gibbous';
+
+  return {
+    phaseAngle,        // radians
+    phaseAngleDeg: phaseDeg,
+    illumination,      // 0..1
+    chi,               // bright-limb position angle (rad)
+    elongDeg,          // signed elongation (deg)
+    phaseName,
+    isWaxing
+  };
+}
+
+// ============================================================
+// SYZYGY (NEW/FULL MOON) TIMES — Meeus Ch. 49
+// k = integer for new moon (k+0.5 = full moon)
+// k = (year - 2000) * 12.3685
+// JDE = base + 29.530589·k + small T² T³ T⁴ corrections
+// + ~25 periodic correction terms for true syzygy
+// ============================================================
+function meanSyzygyJD(k) {
+  // T in centuries from 1900-Jan-0.5
+  const T = k / 1236.85;
+  const JDE = 2451550.09766
+    + 29.530588861 * k
+    + 0.00015437 * T * T
+    - 0.000000150 * T * T * T
+    + 0.00000000073 * T * T * T * T;
+  return { JDE, T };
+}
+
+function trueSyzygyJD(k) {
+  const { JDE: meanJDE, T } = meanSyzygyJD(k);
+
+  // Sun mean anomaly, Moon mean anomaly, argument of latitude, mean elongation
+  const M = (2.5534 + 29.10535670 * k - 0.0000014 * T * T - 0.00000011 * T * T * T) * D2R;
+  const Mp = (201.5643 + 385.81693528 * k + 0.0107582 * T * T + 0.00001238 * T * T * T - 0.000000058 * T * T * T * T) * D2R;
+  const F = (160.7108 + 390.67050284 * k - 0.0016118 * T * T - 0.00000227 * T * T * T + 0.000000011 * T * T * T * T) * D2R;
+  const Omega = (124.7746 - 1.56375588 * k + 0.0020672 * T * T + 0.00000215 * T * T * T) * D2R;
+  const E = 1 - 0.002516 * T - 0.0000074 * T * T;
+
+  const isNew = Math.abs(k - Math.round(k)) < 0.25;
+
+  let corr;
+  if (isNew) {
+    corr = -0.40720 * Math.sin(Mp)
+      + 0.17241 * E * Math.sin(M)
+      + 0.01608 * Math.sin(2 * Mp)
+      + 0.01039 * Math.sin(2 * F)
+      + 0.00739 * E * Math.sin(Mp - M)
+      - 0.00514 * E * Math.sin(Mp + M)
+      + 0.00208 * E * E * Math.sin(2 * M)
+      - 0.00111 * Math.sin(Mp - 2 * F)
+      - 0.00057 * Math.sin(Mp + 2 * F)
+      + 0.00056 * E * Math.sin(2 * Mp + M)
+      - 0.00042 * Math.sin(3 * Mp)
+      + 0.00042 * E * Math.sin(M + 2 * F)
+      + 0.00038 * E * Math.sin(M - 2 * F)
+      - 0.00024 * E * Math.sin(2 * Mp - M)
+      - 0.00017 * Math.sin(Omega)
+      - 0.00007 * Math.sin(Mp + 2 * M);
+  } else {
+    corr = -0.40614 * Math.sin(Mp)
+      + 0.17302 * E * Math.sin(M)
+      + 0.01614 * Math.sin(2 * Mp)
+      + 0.01043 * Math.sin(2 * F)
+      + 0.00734 * E * Math.sin(Mp - M)
+      - 0.00515 * E * Math.sin(Mp + M)
+      + 0.00209 * E * E * Math.sin(2 * M)
+      - 0.00111 * Math.sin(Mp - 2 * F)
+      - 0.00057 * Math.sin(Mp + 2 * F)
+      + 0.00056 * E * Math.sin(2 * Mp + M)
+      - 0.00042 * Math.sin(3 * Mp)
+      + 0.00042 * E * Math.sin(M + 2 * F)
+      + 0.00038 * E * Math.sin(M - 2 * F)
+      - 0.00024 * E * Math.sin(2 * Mp - M)
+      - 0.00017 * Math.sin(Omega)
+      - 0.00007 * Math.sin(Mp + 2 * M);
+  }
+
+  return { JDE: meanJDE + corr, M: M / D2R, Mp: Mp / D2R, F: F / D2R, Omega: Omega / D2R, E };
+}
+
+// ============================================================
+// ECLIPSE DETECTION — at each syzygy, check if Moon is near a node
+// |sin F| < 0.36 → eclipse possible. Then geometry tells us type.
+// ============================================================
+function checkEclipse(syzygy, isLunar) {
+  const F = syzygy.F * D2R;
+  const sinF = Math.sin(F);
+  const absSinF = Math.abs(sinF);
+
+  if (absSinF > 0.36) return null;
+
+  // F1 corrected for argument of node
+  const F1 = (syzygy.F - 0.02665 * Math.sin(syzygy.Omega * D2R) * R2D) * D2R;
+  const absSinF1 = Math.abs(Math.sin(F1));
+
+  if (isLunar) {
+    // Lunar eclipse geometry (Earth's shadow on Moon)
+    const u = 0.0059 + 0.0046 * syzygy.E * Math.cos(syzygy.M * D2R);
+    const penumbralRadius = 1.2848 + u;
+    const umbralRadius = 0.7403 - u;
+
+    const gamma = (1.4979 * Math.sin(F1)) + (
+      (Math.sin(syzygy.Mp * D2R) * 0.0096)
+      - (Math.sin(syzygy.M * D2R) * 0.0073 * syzygy.E)
+      + (Math.sin(syzygy.M * D2R + syzygy.Mp * D2R) * 0.0002 * syzygy.E)
+    ) * Math.sign(F1);
+    const moonRadius = 0.2725 + 0.0001 * Math.cos(syzygy.Mp * D2R);
+
+    const absGamma = Math.abs(gamma);
+    if (absGamma > 1.5573 + moonRadius) return null;
+
+    let type, magnitude;
+    if (absGamma < umbralRadius - moonRadius) {
+      type = 'Total';
+      magnitude = (umbralRadius - absGamma + moonRadius) / (2 * moonRadius);
+    } else if (absGamma < umbralRadius + moonRadius) {
+      type = 'Partial';
+      magnitude = (umbralRadius + moonRadius - absGamma) / (2 * moonRadius);
+    } else if (absGamma < penumbralRadius + moonRadius) {
+      type = 'Penumbral';
+      magnitude = (penumbralRadius + moonRadius - absGamma) / (2 * moonRadius);
+    } else {
+      return null;
+    }
+
+    return { type, magnitude, gamma, isLunar: true };
+  } else {
+    // Solar eclipse geometry
+    const gamma = (1.5573 + 0.0208 * syzygy.E) * Math.sin(F1);
+    const absGamma = Math.abs(gamma);
+
+    if (absGamma > 1.5433) return null;
+
+    let type;
+    // u parameter — distinguishes total vs annular
+    const u = 0.0059 + 0.0046 * syzygy.E * Math.cos(syzygy.M * D2R)
+      - 0.0182 * Math.cos(syzygy.Mp * D2R)
+      + 0.0004 * Math.cos(2 * syzygy.Mp * D2R)
+      - 0.0005 * Math.cos((syzygy.M + syzygy.Mp) * D2R);
+
+    if (absGamma > 0.9972) {
+      type = 'Partial';
+    } else if (u < 0) {
+      type = 'Total';
+    } else if (u > 0.0047) {
+      type = 'Annular';
+    } else {
+      type = 'Hybrid';
+    }
+
+    return { type, gamma, isLunar: false };
+  }
+}
+
+// ============================================================
+// FIND NEXT ECLIPSE (solar or lunar) from a given JD
+// Scans forward through syzygies up to 1 year (12 lunations max)
+// ============================================================
+function findNextEclipse(currentJD, isLunar) {
+  // Estimate k for next syzygy
+  const yearApprox = (currentJD - J2000_JD) / 365.25 + 2000;
+  let kBase = Math.round((yearApprox - 2000) * 12.3685);
+
+  for (let attempt = 0; attempt < 15; attempt++) {
+    const k = kBase + (isLunar ? 0.5 : 0);
+    const syzygy = trueSyzygyJD(k);
+    if (syzygy.JDE > currentJD) {
+      const eclipse = checkEclipse(syzygy, isLunar);
+      if (eclipse) {
+        return { jd: syzygy.JDE, eclipse };
+      }
+    }
+    kBase += 1;
+  }
+  return null;
+}
+
+// Find the next N solar eclipses, annotated with γ-minimized greatest-eclipse
+// coordinates (validated: ≤1° of NASA SE reference data).
+function findUpcomingSolarEclipses(currentJD, count) {
+  const yearApprox = (currentJD - J2000_JD) / 365.25 + 2000;
+  let kBase = Math.round((yearApprox - 2000) * 12.3685);
+  const out = [];
+  for (let attempt = 0; attempt < 130 && out.length < count; attempt++) {
+    const syzygy = trueSyzygyJD(kBase);
+    if (syzygy.JDE > currentJD) {
+      const eclipse = checkEclipse(syzygy, false);
+      if (eclipse) {
+        // Quick γ-minimization: sample ±20 min around syzygy at 1-min steps
+        // to find the true greatest-eclipse instant (differs from syzygy by up to ~15 min).
+        const T0 = julianCenturiesFromJD(syzygy.JDE);
+        const yr0 = (syzygy.JDE - J2000_JD) / 365.25 + 2000;
+        const dTsec = deltaT(yr0);
+        const earth0 = computePlanetPos('earth', T0);
+        let best = null, bestGamma = Infinity;
+        for (let dt = -20; dt <= 20; dt++) {
+          const jdTT = syzygy.JDE + dt / 1440;
+          const jdUT = jdTT - dTsec / 86400;
+          const Tl = julianCenturiesFromJD(jdTT);
+          const moonl = moonPosition(Tl);
+          const res = shadowGroundPoint(jdTT, jdUT, earth0, moonl);
+          if (res.gamma < bestGamma) {
+            bestGamma = res.gamma;
+            best = res.hit ? { lat: res.lat, lon: res.lon } : null;
+          }
+        }
+        if (!best) {
+          // Partial: axis misses Earth, fall back to sublunar at syzygy
+          const jdUT = syzygy.JDE - dTsec / 86400;
+          const moon0 = moonPosition(T0);
+          const sub = sublunarPoint(jdUT, moon0, T0);
+          best = { lat: sub.lat, lon: sub.lon };
+        }
+        eclipse.gamma = bestGamma;
+        out.push({ jd: syzygy.JDE, eclipse, lat: best.lat, lon: best.lon });
+      }
+    }
+    kBase += 1;
+  }
+  return out;
+}
+
+// Convert a Julian Date back to a calendar date (for displaying eclipse times)
+function jdToCalendar(jd) {
+  jd += 0.5;
+  const Z = Math.floor(jd);
+  const F = jd - Z;
+  let A;
+  if (Z < 2299161) {
+    A = Z;
+  } else {
+    const alpha = Math.floor((Z - 1867216.25) / 36524.25);
+    A = Z + 1 + alpha - Math.floor(alpha / 4);
+  }
+  const B = A + 1524;
+  const C = Math.floor((B - 122.1) / 365.25);
+  const D = Math.floor(365.25 * C);
+  const E = Math.floor((B - D) / 30.6001);
+  const day = B - D - Math.floor(30.6001 * E) + F;
+  const month = E < 14 ? E - 1 : E - 13;
+  const year = month > 2 ? C - 4716 : C - 4715;
+  const dayInt = Math.floor(day);
+  const dayFrac = day - dayInt;
+  const totalSeconds = dayFrac * 86400;
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  return { year, month, day: dayInt, hour: h, minute: m };
+}
+
+// ============================================================
+// ASTRONOMICAL CONFIDENCE
+// Returns {label, errorEstimate, percentReliable} for a given T
+// ============================================================
+function astroConfidence(T) {
+  const yearsFromJ2000 = T * 100;
+  const absYears = Math.abs(yearsFromJ2000);
+
+  // VSOP87B (full series) is rigorously valid ±4000 yr → milliarcsec.
+  // ELP/MPP02 LLR (full series) gives <0.1″ over ±5000 yr.
+  // Beyond ±4 millennia, VSOP polynomial multipliers are clamped, which
+  // freezes long-period perturbations but keeps mean motion exact.
+  let label, planetErr, moonErr;
+  if (absYears < 100) {
+    label = 'reference';
+    planetErr = '< 1 mas';
+    moonErr = '< 0.05″';
+  } else if (absYears < 1000) {
+    label = 'high precision';
+    planetErr = '< 1″';
+    moonErr = '< 0.1″';
+  } else if (absYears < 4000) {
+    label = 'VSOP87B nominal';
+    planetErr = '~ a few ″';
+    moonErr = '< 1″';
+  } else if (absYears < 10000) {
+    label = 'clamped polynomial';
+    planetErr = '~ 1 arcmin';
+    moonErr = '~ 5″';
+  } else if (absYears < 20000) {
+    label = 'physical extrapolation';
+    planetErr = '~ 0.5°';
+    moonErr = '~ 1 arcmin';
+  } else if (absYears < 35000) {
+    label = 'long-term trend';
+    planetErr = '~ 1°';
+    moonErr = '~ 10 arcmin';
+  } else {
+    label = 'speculative';
+    planetErr = '~ several °';
+    moonErr = '~ 1°';
+  }
+
+  const reliability = Math.max(0, 1 - absYears / 50000);
+  return { label, planetErr, moonErr, yearsFromJ2000, reliability };
+}
+
+// ============================================================
+// SVG ORRERY RENDERER
+// Top-down view, logarithmic orbit spacing so all 9 bodies fit.
+// Center = Sun = clock face. Orbits drawn as ellipses (a, e),
+// rotated by longitude of perihelion + ascending node.
+// ============================================================
+const ORRERY_CENTER = 400;       // svg viewBox center (800x800)
+const ORRERY_INNER_R = 120;       // Mercury orbit — clock face is 90px radius, 30px gap
+const ORRERY_OUTER_R = 380;       // Pluto orbit, edge of svg
+
+// Logarithmic mapping from semi-major axis [AU] to pixel radius.
+// Mercury (0.39 AU) → Pluto (39.5 AU) is a 100× dynamic range,
+// log spacing keeps inner planets readable while still showing the outer giants.
+function auToPixels(rAU) {
+  const minLog = Math.log(0.35);
+  const maxLog = Math.log(45);
+  const norm = (Math.log(Math.max(0.35, Math.min(45, rAU))) - minLog) / (maxLog - minLog);
+  return ORRERY_INNER_R + norm * (ORRERY_OUTER_R - ORRERY_INNER_R);
+}
+
+function svgEl(tag, attrs) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+let orreryPlanetDots = {};
+let orreryMoonDot = null;
+let orreryConfidenceRing = null;
+
+function buildOrrery() {
+  const svg = document.getElementById('orrery-svg');
+  svg.innerHTML = '';
+
+  // Background subtle radial gradient already from CSS / clock face
+
+  // Confidence ring (drawn first, behind everything)
+  orreryConfidenceRing = svgEl('circle', {
+    class: 'confidence-ring',
+    cx: ORRERY_CENTER, cy: ORRERY_CENTER,
+    r: ORRERY_OUTER_R - 5,
+    'stroke-dasharray': '2 6'
+  });
+  svg.appendChild(orreryConfidenceRing);
+
+  // Draw orbit guide circles (we'll keep these as circles since the orrery is
+  // log-scaled; ellipses would distort badly. The actual computed positions
+  // honor the elliptical shape via Kepler's equation.)
+  for (const info of PLANET_INFO) {
+    const el = PLANET_ELEMENTS[info.key];
+    const aPix = auToPixels(el[0]);
+    const orbit = svgEl('circle', {
+      class: 'orbit-path' + (info.key === 'earth' ? ' earth' : ''),
+      cx: ORRERY_CENTER,
+      cy: ORRERY_CENTER,
+      r: aPix
+    });
+    svg.appendChild(orbit);
+  }
+
+  // Planet dots (positioned later)
+  for (const info of PLANET_INFO) {
+    const dot = svgEl('circle', {
+      class: 'planet-dot',
+      cx: ORRERY_CENTER,
+      cy: ORRERY_CENTER,
+      r: info.radiusPx,
+      fill: info.color,
+      filter: 'drop-shadow(0 0 ' + (info.radiusPx * 0.6) + 'px ' + info.color + ')'
+    });
+    const title = svgEl('title', {});
+    title.textContent = info.name;
+    dot.appendChild(title);
+    svg.appendChild(dot);
+    orreryPlanetDots[info.key] = dot;
+
+    // Label slightly outside the planet
+    const label = svgEl('text', {
+      class: 'planet-label',
+      x: ORRERY_CENTER,
+      y: ORRERY_CENTER,
+      'data-planet': info.key
+    });
+    label.textContent = info.name;
+    svg.appendChild(label);
+    orreryPlanetDots[info.key + '_label'] = label;
+  }
+
+  // Moon dot — orbits Earth in the orrery
+  orreryMoonDot = svgEl('circle', {
+    cx: ORRERY_CENTER,
+    cy: ORRERY_CENTER,
+    r: 1.5,
+    fill: '#dddddd',
+    filter: 'drop-shadow(0 0 2px #dddddd)'
+  });
+  svg.appendChild(orreryMoonDot);
+}
+
+function updateOrrery(astroState) {
+  for (const info of PLANET_INFO) {
+    const pos = astroState.planets[info.key];
+    if (!pos) continue;
+    // Project to 2D (top-down ecliptic). Heliocentric longitude + log radius.
+    const rPx = auToPixels(pos.r);
+    const lonRad = pos.lon * D2R;
+    const cosL = Math.cos(lonRad), sinL = Math.sin(lonRad);
+    const x = ORRERY_CENTER + rPx * cosL;
+    const y = ORRERY_CENTER + rPx * sinL;
+    orreryPlanetDots[info.key].setAttribute('cx', x);
+    orreryPlanetDots[info.key].setAttribute('cy', y);
+
+    // Label pushed radially OUTWARD from the sun, with per-planet offset
+    // so inner-system planets (clustered under log scaling) don't pile up.
+    const off = (info.labelOffset || 12) + info.radiusPx;
+    const lx = x + off * cosL;
+    const ly = y + off * sinL + 3; // +3 = vertical-center text
+    const label = orreryPlanetDots[info.key + '_label'];
+    label.setAttribute('x', lx);
+    label.setAttribute('y', ly);
+  }
+
+  // Place Moon orbiting Earth (visually amplified — real Moon is 0.0026 AU
+  // from Earth, would be invisible at orrery scale)
+  const earthPos = astroState.planets.earth;
+  const moonGeo = astroState.moon;
+  if (earthPos && moonGeo) {
+    const earthRPx = auToPixels(earthPos.r);
+    const earthX = ORRERY_CENTER + earthRPx * Math.cos(earthPos.lon * D2R);
+    const earthY = ORRERY_CENTER + earthRPx * Math.sin(earthPos.lon * D2R);
+    // Moon's geocentric longitude → angle around Earth
+    // Visually scale Moon distance to ~10px
+    const moonAngle = moonGeo.lon * D2R;
+    const moonOrbitPx = 10;
+    const moonX = earthX + moonOrbitPx * Math.cos(moonAngle);
+    const moonY = earthY + moonOrbitPx * Math.sin(moonAngle);
+    orreryMoonDot.setAttribute('cx', moonX);
+    orreryMoonDot.setAttribute('cy', moonY);
+  }
+
+  // Confidence ring opacity scales with distance from J2000
+  if (orreryConfidenceRing) {
+    const conf = astroState.confidence;
+    orreryConfidenceRing.setAttribute('opacity', 0.05 + (1 - conf.reliability) * 0.4);
+  }
+}
+
+// ============================================================
+// MOON PHASE CIRCLE RENDERER
+// The terminator is the projection of Earth's shadow on the Moon.
+// In a 2D circle of radius R, the terminator is a half-ellipse with:
+//   semi-major axis = R (vertical)
+//   semi-minor axis = R · |cos(phase_angle)|
+// The bright limb's position angle χ rotates the figure.
+// ============================================================
+function buildMoonPhase() {
+  const svg = document.getElementById('moon-circle');
+  svg.innerHTML = '';
+
+  // Background dark circle (full Moon outline / shadow)
+  const dark = svgEl('circle', {
+    cx: 0, cy: 0, r: 28,
+    fill: '#0a0a0f', stroke: '#222', 'stroke-width': 1
+  });
+  svg.appendChild(dark);
+
+  // Lit half-circle (will be drawn over the dark)
+  const lit = svgEl('path', { id: 'moon-lit-path', fill: '#e0e0d8' });
+  svg.appendChild(lit);
+
+  // Subtle rim
+  const rim = svgEl('circle', {
+    cx: 0, cy: 0, r: 28,
+    fill: 'none', stroke: '#333', 'stroke-width': 0.5
+  });
+  svg.appendChild(rim);
+}
+
+function updateMoonPhase(phaseInfo) {
+  const litPath = document.getElementById('moon-lit-path');
+  if (!litPath) return;
+
+  const R = 28;
+  const i = phaseInfo.phaseAngle; // 0 = full, π = new
+  // phase fraction k: 0=new, 1=full
+  const k = phaseInfo.illumination;
+
+  // For drawing, we treat the Moon as seen from Earth, with North up.
+  // The illuminated portion is bounded by:
+  //   - the limb circle (radius R) on the bright side
+  //   - the terminator ellipse (semi-axes R x R·|cos i|) on the shadow side
+  // When k > 0.5: terminator is on the shadow side of the Moon's center → gibbous
+  // When k < 0.5: terminator is on the bright side → crescent
+  // When k = 0: nothing visible. When k = 1: full disk.
+
+  // Determine which side is lit from elongation sign.
+  // Waxing (elongDeg > 0): bright on the right (West-rises-first-quarter).
+  // Waning: bright on the left.
+  const isWaxing = phaseInfo.isWaxing;
+
+  // Compute the terminator ellipse semi-minor axis.
+  // |cos(phase_angle)| modulates terminator curvature.
+  // When i = π/2 (quarter), terminator is a straight line (semi-minor = 0).
+  const termSemi = R * Math.abs(Math.cos(i));
+
+  let pathD;
+  if (k < 0.005) {
+    // New moon — show nothing lit
+    pathD = '';
+  } else if (k > 0.995) {
+    // Full moon — full disk
+    pathD = `M ${-R},0 A ${R},${R} 0 1,1 ${R},0 A ${R},${R} 0 1,1 ${-R},0 Z`;
+  } else {
+    // Build the lit-region path
+    // Two arcs: (1) outer limb arc on the bright side, (2) terminator ellipse arc.
+    // Both go from (0, -R) (top) to (0, R) (bottom).
+
+    if (k < 0.5) {
+      // CRESCENT: lit area between limb and terminator-ellipse, small sliver
+      // Both arcs curve toward the bright side.
+      const sweepLimb = isWaxing ? 0 : 1; // limb arc: bright side
+      const sweepTerm = isWaxing ? 1 : 0; // terminator: also bright side
+      // For crescent, terminator ellipse is on the same side as the bright limb,
+      // creating a curved shadow that eats into the disk.
+      pathD = `M 0,${-R}
+        A ${R},${R} 0 0,${sweepLimb} 0,${R}
+        A ${termSemi},${R} 0 0,${sweepTerm} 0,${-R} Z`;
+    } else {
+      // GIBBOUS: lit area between limb and terminator-ellipse, mostly full
+      // Bright limb arc + terminator on the shadow side.
+      const sweepLimb = isWaxing ? 0 : 1;
+      const sweepTerm = isWaxing ? 0 : 1;
+      pathD = `M 0,${-R}
+        A ${R},${R} 0 0,${sweepLimb} 0,${R}
+        A ${termSemi},${R} 0 0,${sweepTerm} 0,${-R} Z`;
+    }
+  }
+
+  litPath.setAttribute('d', pathD);
+
+  // Update text
+  document.getElementById('moon-phase-name').textContent = phaseInfo.phaseName;
+  document.getElementById('moon-illumination').textContent =
+    (phaseInfo.illumination * 100).toFixed(1) + '% illuminated';
+}
+
+// ============================================================
+// ECLIPSE PANEL RENDERER
+// ============================================================
+function updateEclipsePanel(astroState, currentJD) {
+  const solarEl = document.getElementById('solar-eclipse-when');
+  const solarDetail = document.getElementById('solar-eclipse-detail');
+  const lunarEl = document.getElementById('lunar-eclipse-when');
+  const lunarDetail = document.getElementById('lunar-eclipse-detail');
+
+  // Solar
+  if (astroState.nextSolarEclipse) {
+    const days = astroState.nextSolarEclipse.jd - currentJD;
+    const cal = jdToCalendar(astroState.nextSolarEclipse.jd);
+    solarEl.textContent = formatJDDate(cal) + ' · in ' + formatDuration(days);
+    solarDetail.textContent = astroState.nextSolarEclipse.eclipse.type + ' eclipse';
+    solarEl.className = 'eclipse-when' + (days < 1 ? ' active' : days < 30 ? ' imminent' : '');
+  } else {
+    solarEl.textContent = 'none in next year';
+    solarDetail.textContent = '';
+  }
+
+  // Lunar
+  if (astroState.nextLunarEclipse) {
+    const days = astroState.nextLunarEclipse.jd - currentJD;
+    const cal = jdToCalendar(astroState.nextLunarEclipse.jd);
+    lunarEl.textContent = formatJDDate(cal) + ' · in ' + formatDuration(days);
+    lunarDetail.textContent = astroState.nextLunarEclipse.eclipse.type + ' eclipse';
+    lunarEl.className = 'eclipse-when' + (days < 1 ? ' active' : days < 30 ? ' imminent' : '');
+  } else {
+    lunarEl.textContent = 'none in next year';
+    lunarDetail.textContent = '';
+  }
+}
+
+function formatJDDate(cal) {
+  return `${cal.year}-${pad(cal.month)}-${pad(cal.day)}`;
+}
+
+function formatDuration(days) {
+  if (days < 0) return 'past';
+  if (days < 1) {
+    const hours = days * 24;
+    if (hours < 1) return Math.floor(hours * 60) + ' min';
+    return hours.toFixed(1) + ' hrs';
+  }
+  if (days < 30) return Math.floor(days) + ' days';
+  if (days < 365) return (days / 30).toFixed(1) + ' months';
+  return (days / 365.25).toFixed(2) + ' years';
+}
+
+// ============================================================
+// CONFIDENCE INDICATOR
+// ============================================================
+function updateConfidence(conf) {
+  const text = document.getElementById('confidence-text');
+  const yrs = conf.yearsFromJ2000;
+  const yrStr = Math.abs(yrs) < 1 ? 'at J2000.0' :
+    yrs > 0 ? `+${yrs.toFixed(1)} y from J2000` :
+    `${yrs.toFixed(1)} y from J2000`;
+  text.innerHTML =
+    `<div style="display:flex;justify-content:space-between;color:#666;margin-bottom:0.3rem;">
+       <span style="color:#aaa;letter-spacing:0.05em">${conf.label}</span>
+       <span style="color:#666">${yrStr}</span>
+     </div>
+     <div style="color:#444;font-size:0.55rem">planet ${conf.planetErr} · moon ${conf.moonErr}</div>`;
+
+  // Position the marker on the bar
+  const marker = document.getElementById('confidence-marker');
+  const halfRange = 25000;
+  const clamped = Math.max(-halfRange, Math.min(halfRange, yrs));
+  const percent = 50 + (clamped / halfRange) * 50;
+  marker.style.left = percent + '%';
+}
+
+// ============================================================
+// WORLD MAP — subsolar point, terminator, upcoming eclipses
+// Equirectangular projection: lon ∈ [−180,+180] → x ∈ [0, W],
+//                              lat ∈ [+90,−90]  → y ∈ [0, H].
+// ============================================================
+const MAP_W = 1600, MAP_H = 800;
+const lonToX = lon => ((lon + 180) / 360) * MAP_W;
+const latToY = lat => ((90 - lat) / 180) * MAP_H;
+
+let worldDayPath = null;
+let worldTerminatorPath = null;
+let worldSubsolarGlow = null;
+let worldSubsolarDot = null;
+let worldMoonHorizonPath = null;
+let worldSublunarGlow = null;
+let worldSublunarDot = null;
+let worldEclipseGroup = null;
+
+function buildWorldMap() {
+  const svg = document.getElementById('world-map');
+  if (!svg) return;
+  svg.innerHTML = '';
+
+  // 1) Day-side polygon (drawn first, fills the lit hemisphere)
+  worldDayPath = svgEl('path', { class: 'day-side', d: '' });
+  svg.appendChild(worldDayPath);
+
+  // 2) Graticule — lat/lon every 30°
+  const grat = svgEl('g', { class: 'graticule' });
+  for (let lon = -180; lon <= 180; lon += 30) {
+    const x = lonToX(lon);
+    grat.appendChild(svgEl('line', { x1: x, y1: 0, x2: x, y2: MAP_H, class: 'graticule' }));
+  }
+  for (let lat = -90; lat <= 90; lat += 30) {
+    const y = latToY(lat);
+    grat.appendChild(svgEl('line', { x1: 0, y1: y, x2: MAP_W, y2: y, class: 'graticule' }));
+  }
+  svg.appendChild(grat);
+
+  // 3) Continents (Natural Earth 1:110m)
+  if (typeof WORLD_LAND_PATHS !== 'undefined') {
+    const landGroup = svgEl('g', { class: 'land' });
+    for (const pathStr of WORLD_LAND_PATHS) {
+      // The data uses unit-square coordinates [0,1] × [0,1]; rescale to MAP_W × MAP_H
+      const scaled = pathStr.replace(/([ML])(-?\d*\.?\d+),(-?\d*\.?\d+)/g,
+        (m, cmd, x, y) => cmd + (parseFloat(x) * MAP_W).toFixed(1) + ',' + (parseFloat(y) * MAP_H).toFixed(1));
+      landGroup.appendChild(svgEl('path', { class: 'land', d: scaled }));
+    }
+    svg.appendChild(landGroup);
+  }
+
+  // 4) Terminator line (on top of land)
+  worldTerminatorPath = svgEl('path', { class: 'terminator', d: '' });
+  svg.appendChild(worldTerminatorPath);
+
+  // 5) Moon-horizon line — boundary of the hemisphere where the moon is up
+  worldMoonHorizonPath = svgEl('path', { class: 'moon-horizon', d: '' });
+  svg.appendChild(worldMoonHorizonPath);
+
+  // 6) Subsolar marker (glow + dot)
+  worldSubsolarGlow = svgEl('circle', {
+    class: 'subsolar-glow', cx: 0, cy: 0, r: 80
+  });
+  svg.appendChild(worldSubsolarGlow);
+  worldSubsolarDot = svgEl('circle', {
+    class: 'subsolar-dot', cx: 0, cy: 0, r: 5
+  });
+  svg.appendChild(worldSubsolarDot);
+
+  // 7) Sublunar marker (where the moon is overhead)
+  worldSublunarGlow = svgEl('circle', {
+    class: 'sublunar-glow', cx: 0, cy: 0, r: 60
+  });
+  svg.appendChild(worldSublunarGlow);
+  worldSublunarDot = svgEl('circle', {
+    class: 'sublunar-dot', cx: 0, cy: 0, r: 4
+  });
+  svg.appendChild(worldSublunarDot);
+
+  // 8) Eclipse group (markers + labels rendered into this)
+  worldEclipseGroup = svgEl('g', {});
+  svg.appendChild(worldEclipseGroup);
+}
+
+// Compute the day-side polygon as a list of (x,y) points.
+// Strategy: walk longitude from −180→+180 sampling the terminator latitude,
+// then close along the appropriate map edge depending on which hemisphere
+// the subsolar point is in.
+function dayPolygonPath(subLat, subLon) {
+  const sLat = subLat * D2R;
+  const tanS = Math.tan(sLat);
+  const STEP = 2; // degrees of longitude per sample — 180 segments, smooth enough
+
+  const pts = [];
+  for (let lon = -180; lon <= 180; lon += STEP) {
+    const dLon = (lon - subLon) * D2R;
+    let lat;
+    if (Math.abs(tanS) < 1e-6) {
+      // Equinox edge case — terminator runs through both poles at lon ± 90°.
+      // Day side is the longitude band within ±90° of subLon.
+      // Handle by drawing day polygon as that band (special-cased below).
+      lat = 0;
+    } else {
+      lat = Math.atan(-Math.cos(dLon) / tanS) * R2D;
+    }
+    pts.push([lonToX(lon), latToY(lat)]);
+  }
+
+  // Equinox special case: just return a vertical strip
+  if (Math.abs(tanS) < 1e-6) {
+    const x1 = lonToX(subLon - 90);
+    const x2 = lonToX(subLon + 90);
+    if (x1 < x2) {
+      return `M${x1},0 L${x2},0 L${x2},${MAP_H} L${x1},${MAP_H} Z`;
+    }
+    // Wraps around dateline — two rectangles
+    return `M0,0 L${x2},0 L${x2},${MAP_H} L0,${MAP_H} Z` +
+           `M${x1},0 L${MAP_W},0 L${MAP_W},${MAP_H} L${x1},${MAP_H} Z`;
+  }
+
+  // Day side extends to the same pole as the subsolar latitude
+  const polarY = subLat > 0 ? 0 : MAP_H;
+  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for (let i = 1; i < pts.length; i++) {
+    d += ` L${pts[i][0].toFixed(1)},${pts[i][1].toFixed(1)}`;
+  }
+  d += ` L${MAP_W},${polarY} L0,${polarY} Z`;
+  return d;
+}
+
+function terminatorOnlyPath(subLat, subLon) {
+  const sLat = subLat * D2R;
+  const tanS = Math.tan(sLat);
+  if (Math.abs(tanS) < 1e-6) {
+    // Vertical lines at subLon ± 90°
+    const x1 = lonToX(subLon - 90);
+    const x2 = lonToX(subLon + 90);
+    return `M${x1},0 L${x1},${MAP_H} M${x2},0 L${x2},${MAP_H}`;
+  }
+  let d = '';
+  for (let lon = -180; lon <= 180; lon += 1) {
+    const dLon = (lon - subLon) * D2R;
+    const lat = Math.atan(-Math.cos(dLon) / tanS) * R2D;
+    const x = lonToX(lon);
+    const y = latToY(lat);
+    d += (lon === -180 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+  }
+  return d;
+}
+
+// FAST PATH — runs every render frame. Only the subsolar/sublunar point
+// positions and the day/night terminator change at human-perceptible rates
+// (GMST advances 0.0042°/sec). Everything else is cached.
+function updateWorldMapDynamic(astroState, jdUT) {
+  if (!worldDayPath || !astroState) return;
+
+  const sub = subsolarPoint(jdUT, astroState.sun, astroState.T);
+  const subm = sublunarPoint(jdUT, astroState.moon, astroState.T);
+
+  // Day/night fill + terminator line
+  worldDayPath.setAttribute('d', dayPolygonPath(sub.lat, sub.lon));
+  worldTerminatorPath.setAttribute('d', terminatorOnlyPath(sub.lat, sub.lon));
+
+  // Moon-above-horizon boundary (the great circle 90° from sublunar point)
+  worldMoonHorizonPath.setAttribute('d', terminatorOnlyPath(subm.lat, subm.lon));
+
+  // Subsolar glow + dot
+  const sx = lonToX(sub.lon);
+  const sy = latToY(sub.lat);
+  worldSubsolarGlow.setAttribute('cx', sx);
+  worldSubsolarGlow.setAttribute('cy', sy);
+  worldSubsolarDot.setAttribute('cx', sx);
+  worldSubsolarDot.setAttribute('cy', sy);
+
+  // Sublunar glow + dot
+  const mx = lonToX(subm.lon);
+  const my = latToY(subm.lat);
+  worldSublunarGlow.setAttribute('cx', mx);
+  worldSublunarGlow.setAttribute('cy', my);
+  worldSublunarDot.setAttribute('cx', mx);
+  worldSublunarDot.setAttribute('cy', my);
+
+  // Readout — high-precision so the trailing digits visibly tick at ~60Hz
+  const readout = document.getElementById('world-readout');
+  if (readout) {
+    const ns = sub.lat >= 0 ? 'N' : 'S';
+    const ew = sub.lon >= 0 ? 'E' : 'W';
+    const ns2 = subm.lat >= 0 ? 'N' : 'S';
+    const ew2 = subm.lon >= 0 ? 'E' : 'W';
+    readout.innerHTML =
+      `<span style="color:#ffd166">☉</span> ${Math.abs(sub.lat).toFixed(4)}°${ns} ${Math.abs(sub.lon).toFixed(4)}°${ew}` +
+      ` &nbsp;&nbsp; ` +
+      `<span style="color:#bbbbcc">☽</span> ${Math.abs(subm.lat).toFixed(4)}°${ns2} ${Math.abs(subm.lon).toFixed(4)}°${ew2}`;
+  }
+}
+
+// SLOW PATH — runs at ~1 Hz from astroUpdate. Recomputes the upcoming-eclipse
+// markers (only changes when we cross past an eclipse).
+function updateWorldMapSlow(astroState, jdUT) {
+  if (!worldEclipseGroup || !astroState) return;
+
+  if (!astroState._upcomingEclipses ||
+      Math.abs(jdUT - astroState._upcomingEclipsesAt) > 1) {
+    astroState._upcomingEclipses = findUpcomingSolarEclipses(jdUT, 8);
+    astroState._upcomingEclipsesAt = jdUT;
+  }
+
+  worldEclipseGroup.innerHTML = '';
+  for (const ev of astroState._upcomingEclipses) {
+    const ex = lonToX(ev.lon);
+    const ey = latToY(ev.lat);
+    const cls = 'eclipse-marker ' + ((ev.eclipse.type || '') + '').toLowerCase();
+    worldEclipseGroup.appendChild(svgEl('circle', {
+      cx: ex, cy: ey, r: 5, class: cls
+    }));
+    const yearLabel = svgEl('text', {
+      class: 'eclipse-label',
+      x: ex, y: ey + 16,
+      'text-anchor': 'middle'
+    });
+    const cal = jdToCalendar(ev.jd);
+    yearLabel.textContent = `${cal.year}-${String(cal.month).padStart(2,'0')}`;
+    worldEclipseGroup.appendChild(yearLabel);
+  }
+
+  // Refresh the per-eclipse standalone maps too
+  updateEclipseMaps(astroState, jdUT);
+}
+
+// ============================================================
+// PER-ECLIPSE STANDALONE MAPS
+// One card per upcoming solar eclipse in the next ~2 years, each showing
+// the actual umbral / antumbral track of totality / annularity, plus the
+// day/night terminator at the moment of greatest eclipse.
+// Tracks are heavy to compute (1 minute steps × 8 hours × VSOP87+ELP)
+// so we cache by eclipseJD and only build cards on first sight.
+// ============================================================
+const eclipseCardCache = new Map();   // eclipseJD.toFixed(2) → { el, track }
+
+function fmtEclipseDateTime(jd) {
+  const cal = jdToCalendar(jd);
+  return {
+    date: `${cal.year}-${String(cal.month).padStart(2,'0')}-${String(cal.day).padStart(2,'0')}`,
+    time: `${String(cal.hour).padStart(2,'0')}:${String(cal.minute).padStart(2,'0')} UT`
+  };
+}
+
+function buildEclipseCard(ev) {
+  const card = document.createElement('div');
+  card.className = 'card eclipse-card';
+
+  const dt = fmtEclipseDateTime(ev.jd);
+  const typeLower = (ev.eclipse.type || '').toLowerCase();
+
+  const titleRow = document.createElement('div');
+  titleRow.className = 'card-title-row';
+  titleRow.innerHTML =
+    `<div class="card-title">${typeLower} solar eclipse · ${dt.date}</div>` +
+    `<div class="world-readout">${dt.time}</div>`;
+  card.appendChild(titleRow);
+
+  const meta = document.createElement('div');
+  meta.className = 'eclipse-track-meta';
+  card.appendChild(meta);
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('class', 'world-map eclipse-mini-map');
+  svg.setAttribute('viewBox', `0 0 ${MAP_W} ${MAP_H}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  card.appendChild(svg);
+
+  // Continents (shared land paths, scaled to MAP_W × MAP_H)
+  if (typeof WORLD_LAND_PATHS !== 'undefined') {
+    const landGroup = svgEl('g', {});
+    for (const pathStr of WORLD_LAND_PATHS) {
+      const scaled = pathStr.replace(/([ML])(-?\d*\.?\d+),(-?\d*\.?\d+)/g,
+        (m, cmd, x, y) => cmd + (parseFloat(x) * MAP_W).toFixed(1) + ',' + (parseFloat(y) * MAP_H).toFixed(1));
+      landGroup.appendChild(svgEl('path', { class: 'land', d: scaled }));
+    }
+    svg.appendChild(landGroup);
+  }
+
+  // Graticule
+  const grat = svgEl('g', {});
+  for (let lon = -180; lon <= 180; lon += 30) {
+    grat.appendChild(svgEl('line', {
+      x1: lonToX(lon), y1: 0, x2: lonToX(lon), y2: MAP_H, class: 'graticule'
+    }));
+  }
+  for (let lat = -60; lat <= 60; lat += 30) {
+    grat.appendChild(svgEl('line', {
+      x1: 0, y1: latToY(lat), x2: MAP_W, y2: latToY(lat), class: 'graticule'
+    }));
+  }
+  svg.appendChild(grat);
+
+  // Day-side at the eclipse instant
+  const T = julianCenturiesFromJD(ev.jd);
+  const yr = (ev.jd - J2000_JD) / 365.25 + 2000;
+  const dTsec = deltaT(yr);
+  const jdUT = ev.jd - dTsec / 86400;
+  const earthAt = computePlanetPos('earth', T);
+  const sunAt = sunPosition(T, earthAt);
+  const sub = subsolarPoint(jdUT, sunAt, T);
+  svg.appendChild(svgEl('path', {
+    class: 'day-side', d: dayPolygonPath(sub.lat, sub.lon)
+  }));
+  svg.appendChild(svgEl('path', {
+    class: 'terminator', d: terminatorOnlyPath(sub.lat, sub.lon)
+  }));
+
+  // The umbral / antumbral track. For partials this comes back empty.
+  const { track, greatest } = eclipseShadowTrack(ev.jd);
+
+  if (track.length >= 2) {
+    let d = '';
+    let prev = null;
+    for (let i = 0; i < track.length; i++) {
+      const x = lonToX(track[i].lon);
+      const y = latToY(track[i].lat);
+      // Start a new sub-path on either:
+      //   (a) dateline wrap (large lon jump between consecutive samples), or
+      //   (b) gap in the time series (shadow temporarily leaves Earth's limb)
+      const breakHere = prev && (
+        Math.abs(track[i].lon - prev.lon) > 180 ||
+        (track[i].jd - prev.jd) > 1.5 / 1440
+      );
+      if (breakHere) {
+        d += ` M${x.toFixed(1)},${y.toFixed(1)}`;
+      } else {
+        d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+      }
+      prev = track[i];
+    }
+    const cls = 'eclipse-track ' + typeLower;
+    svg.appendChild(svgEl('path', { class: cls, d }));
+
+    // Endpoints (where shadow starts/ends touching Earth)
+    svg.appendChild(svgEl('circle', {
+      cx: lonToX(track[0].lon), cy: latToY(track[0].lat),
+      r: 3, class: 'eclipse-track-endpoint'
+    }));
+    const last = track[track.length - 1];
+    svg.appendChild(svgEl('circle', {
+      cx: lonToX(last.lon), cy: latToY(last.lat),
+      r: 3, class: 'eclipse-track-endpoint'
+    }));
+
+    // Greatest-eclipse marker (from γ-minimization)
+    const gePt = greatest || { lat: ev.lat, lon: ev.lon };
+    svg.appendChild(svgEl('circle', {
+      cx: lonToX(gePt.lon), cy: latToY(gePt.lat),
+      r: 5, class: 'eclipse-max-marker'
+    }));
+
+    const durMin = (track[track.length-1].jd - track[0].jd) * 1440;
+    meta.innerHTML =
+      `<span>γ = ${(ev.eclipse.gamma || 0).toFixed(4)}</span>` +
+      `<span>track duration ≈ ${durMin.toFixed(0)} min</span>` +
+      `<span>greatest @ ${Math.abs(gePt.lat).toFixed(2)}°${gePt.lat>=0?'N':'S'} ${Math.abs(gePt.lon).toFixed(2)}°${gePt.lon>=0?'E':'W'}</span>`;
+  } else {
+    // No central path → partial-only globally
+    const gePt = greatest || { lat: ev.lat, lon: ev.lon };
+    svg.appendChild(svgEl('circle', {
+      cx: lonToX(gePt.lon), cy: latToY(gePt.lat),
+      r: 7, class: 'eclipse-max-marker'
+    }));
+    meta.innerHTML =
+      `<span>γ = ${(ev.eclipse.gamma || 0).toFixed(4)}</span>` +
+      `<span>partial only — no central shadow on Earth</span>` +
+      `<span>greatest @ ${Math.abs(gePt.lat).toFixed(2)}°${gePt.lat>=0?'N':'S'} ${Math.abs(gePt.lon).toFixed(2)}°${gePt.lon>=0?'E':'W'}</span>`;
+  }
+
+  return card;
+}
+
+function updateEclipseMaps(astroState, jdUT) {
+  const grid = document.getElementById('eclipse-maps');
+  if (!grid || !astroState._upcomingEclipses) return;
+
+  const TWO_YEARS = 2 * 365.25;
+  const upcoming = astroState._upcomingEclipses
+    .filter(ev => ev.jd - jdUT < TWO_YEARS);
+
+  const wantedKeys = new Set(upcoming.map(ev => ev.jd.toFixed(2)));
+
+  // Drop any cards no longer in the 2-year window
+  for (const [key, info] of eclipseCardCache) {
+    if (!wantedKeys.has(key)) {
+      info.el.remove();
+      eclipseCardCache.delete(key);
+    }
+  }
+
+  // Clear placeholder once we have at least one card to show
+  const placeholder = grid.querySelector('.eclipse-maps-placeholder');
+
+  // Build cards we don't have yet
+  for (const ev of upcoming) {
+    const key = ev.jd.toFixed(2);
+    if (!eclipseCardCache.has(key)) {
+      const card = buildEclipseCard(ev);
+      grid.appendChild(card);
+      eclipseCardCache.set(key, { el: card });
+    }
+  }
+
+  if (placeholder && eclipseCardCache.size > 0) placeholder.remove();
+
+  // Reorder by date (appendChild moves to end)
+  const sorted = upcoming.slice().sort((a, b) => a.jd - b.jd);
+  for (const ev of sorted) {
+    const info = eclipseCardCache.get(ev.jd.toFixed(2));
+    if (info) grid.appendChild(info.el);
+  }
+}
+
+// ============================================================
+// MASTER ASTRO UPDATE
+// Computes everything from the current Julian Date.
+// Called at ~1 Hz (planets don't visibly move at 60fps).
+// ============================================================
+let astroState = null;
+let lastAstroJD = 0;
+
+function astroUpdate(jd) {
+  // Heavy computation — cache and only redo at most once per second
+  if (Math.abs(jd - lastAstroJD) < 1 / 86400) return; // < 1 sec change
+  lastAstroJD = jd;
+
+  // Convert UT to TT for orbital mechanics
+  const yearApprox = (jd - J2000_JD) / 365.25 + 2000;
+  const dT = deltaT(yearApprox);
+  const jdTT = jd + dT / 86400;
+  const T = julianCenturiesFromJD(jdTT);
+
+  const planets = {};
+  for (const info of PLANET_INFO) {
+    planets[info.key] = computePlanetPos(info.key, T);
+  }
+
+  const moon = moonPosition(T);
+  const sun = sunPosition(T, planets.earth);
+  const phase = moonPhase(moon, sun);
+  const confidence = astroConfidence(T);
+
+  // Eclipses — only recompute every ~30 minutes since they change slowly
+  if (!astroState || Math.abs(jd - (astroState._eclipseJD || 0)) > 1 / 48) {
+    const nextSolarEclipse = findNextEclipse(jd, false);
+    const nextLunarEclipse = findNextEclipse(jd, true);
+    astroState = {
+      jd, T, dT, planets, moon, sun, phase, confidence,
+      nextSolarEclipse, nextLunarEclipse,
+      _eclipseJD: jd
+    };
+  } else {
+    astroState = {
+      ...astroState,
+      jd, T, dT, planets, moon, sun, phase, confidence
+    };
+  }
+
+  updateOrrery(astroState);
+  updateMoonPhase(phase);
+  updateEclipsePanel(astroState, jd);
+  updateConfidence(confidence);
+  updateWorldMapSlow(astroState, jd);
+}
+
+// --- BUILD DOTS ---
+let tenthDots = [];
+let hundredthDots = [];
+
+function buildDots() {
+  const tenthsGrid = document.getElementById('tenths-dots');
+  for (let i = 0; i < 10; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    tenthsGrid.appendChild(dot);
+    tenthDots.push(dot);
+  }
+  const hundredthsGrid = document.getElementById('hundredths-dots');
+  for (let i = 0; i < 100; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    hundredthsGrid.appendChild(dot);
+    hundredthDots.push(dot);
+  }
+}
+
+// --- BOOT ---
+buildClockFace();
+buildDots();
+buildOrrery();
+buildMoonPhase();
+buildWorldMap();
+requestAnimationFrame(render);
+</script>
+</body>
+</html>
