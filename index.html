@@ -522,6 +522,168 @@ h1 {
 }
 
 /* ============================================
+   BARYCENTER PANEL — Sun wobble around SSB
+   ============================================ */
+.barycenter-panel {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.barycenter-svg {
+  width: 90px;
+  height: 90px;
+  background: radial-gradient(circle at 50% 50%, #15151f 0%, #0a0a0f 70%);
+  border-radius: 50%;
+}
+
+.barycenter-svg .sun-disk {
+  fill: rgba(255, 200, 80, 0.18);
+  stroke: #cc9944;
+  stroke-width: 0.5;
+}
+
+.barycenter-svg .bary-trail {
+  fill: none;
+  stroke: #ff8844;
+  stroke-width: 0.4;
+  opacity: 0.4;
+}
+
+.barycenter-svg .bary-dot {
+  fill: #ff6633;
+  filter: drop-shadow(0 0 2px #ff6633);
+}
+
+.barycenter-svg .bary-axis {
+  stroke: #2a2a40;
+  stroke-width: 0.3;
+  stroke-dasharray: 1 1;
+}
+
+.barycenter-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.bary-label {
+  font-size: 0.65rem;
+  color: #ff8844;
+  letter-spacing: 0.05em;
+}
+
+.bary-distance {
+  font-size: 0.65rem;
+  color: #888;
+  font-variant-numeric: tabular-nums;
+}
+
+.bary-explain {
+  font-size: 0.55rem;
+  color: #444;
+  line-height: 1.3;
+  margin-top: 0.2rem;
+}
+
+/* ============================================
+   CONJUNCTIONS LIST
+   ============================================ */
+.conjunction-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.62rem;
+}
+
+.conjunction-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid #15151f;
+}
+
+.conjunction-row:last-child { border-bottom: none; }
+
+.conj-pair { color: #aaa; }
+.conj-sep  { color: #ff8844; font-variant-numeric: tabular-nums; }
+.conj-when { color: #555; font-variant-numeric: tabular-nums; }
+
+.conj-section-title {
+  color: #444;
+  font-size: 0.5rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-top: 0.4rem;
+  padding-top: 0.4rem;
+  border-top: 1px solid #15151f;
+}
+
+.conj-transit {
+  color: #ffaa44;
+  font-size: 0.62rem;
+}
+
+/* ============================================
+   COMETS — orrery dots, tails, orbits
+   ============================================ */
+.comet-orbit {
+  fill: none;
+  stroke-width: 0.5;
+  stroke-dasharray: 2 3;
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.comet-tail {
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  pointer-events: none;
+  filter: blur(1.2px);
+}
+
+.comet-dot {
+  pointer-events: auto;
+  cursor: help;
+}
+
+.comets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.6rem;
+}
+
+.comet-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.5rem;
+  align-items: baseline;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid #15151f;
+}
+
+.comet-row:last-child { border-bottom: none; }
+
+.comet-row .comet-name { color: #aaa; font-size: 0.6rem; }
+.comet-row .comet-dist { color: #888; font-variant-numeric: tabular-nums; }
+.comet-row .comet-perih { color: #555; font-size: 0.55rem; }
+.comet-row .comet-name.active { color: #ffcc66; }
+.comet-row .comet-dist.active { color: #ffcc66; }
+
+.comet-swatch {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  transform: rotate(45deg);
+  vertical-align: -1px;
+}
+
+/* ============================================
    CONFIDENCE INDICATOR
    ============================================ */
 .confidence-panel {
@@ -617,6 +779,427 @@ h1 {
   stroke: rgba(255, 220, 140, 0.25);
   stroke-width: 1;
   stroke-dasharray: 4 4;
+}
+
+.world-map .magnetic-overlay {
+  display: none;
+  pointer-events: none;
+}
+
+.world-map.show-magnetic .magnetic-overlay { display: inline; }
+
+.world-map .magnetic-east {
+  stroke: rgba(120, 180, 240, 0.45);
+  stroke-width: 1.2;
+  fill: none;
+}
+
+.world-map .magnetic-west {
+  stroke: rgba(240, 160, 120, 0.45);
+  stroke-width: 1.2;
+  fill: none;
+}
+
+.world-map .magnetic-agonic {
+  stroke: #ff5566;
+  stroke-width: 1.6;
+  fill: none;
+  filter: drop-shadow(0 0 1.5px #ff3344);
+}
+
+.magnetic-toggle {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.8rem;
+  background: rgba(20, 20, 30, 0.85);
+  color: #888;
+  border: 1px solid #25253a;
+  border-radius: 3px;
+  padding: 0.25rem 0.6rem;
+  font: inherit;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.magnetic-toggle:hover { color: #ccc; border-color: #44aaff; }
+.magnetic-toggle.active { color: #44aaff; border-color: #44aaff; }
+
+/* ============================================
+   SKY CHART — visible sky from observer location
+   ============================================ */
+.sky-card {
+  margin-top: 1.2rem;
+  padding: 1.2rem;
+}
+
+.sky-card #sky-canvas {
+  display: block;
+  margin: 0.6rem auto 0.6rem;
+  width: 700px;
+  height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%,
+    #050912 0%, #03070d 50%, #010204 100%);
+  box-shadow:
+    inset 0 0 60px rgba(60, 80, 140, 0.08),
+    0 0 30px rgba(0, 20, 40, 0.6);
+  cursor: crosshair;
+}
+
+.sky-readout {
+  color: #777;
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.sky-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.5rem;
+  font-size: 0.6rem;
+}
+
+.sky-btn {
+  background: rgba(20, 20, 30, 0.85);
+  color: #888;
+  border: 1px solid #25253a;
+  border-radius: 3px;
+  padding: 0.25rem 0.6rem;
+  font: inherit;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.sky-btn:hover { color: #ccc; border-color: #44aaff; }
+.sky-btn.active { color: #44aaff; border-color: #44aaff; }
+
+.sky-help { color: #555; font-size: 0.55rem; margin-left: auto; }
+
+.sky-time-info {
+  text-align: center;
+  color: #666;
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.4rem;
+}
+
+/* Deep-time scrubber (only visible in deep-time mode) */
+.sky-deeptime-panel {
+  display: none;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.7rem 0.8rem;
+  margin-top: 0.5rem;
+  background: rgba(20, 25, 40, 0.4);
+  border: 1px solid #25253a;
+  border-radius: 4px;
+}
+.sky-card.deeptime .sky-deeptime-panel { display: flex; }
+
+.sky-deeptime-explain {
+  font-size: 0.6rem;
+  color: #889;
+  line-height: 1.5;
+}
+.sky-deeptime-explain b { color: #aac4ff; font-weight: 500; }
+
+.sky-deeptime-slider-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 90px;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.sky-deeptime-readout {
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  letter-spacing: 0.03em;
+}
+
+.sky-deeptime-readout .delta { color: #888; font-size: 0.6rem; font-weight: 400; }
+.sky-deeptime-pole {
+  font-size: 0.55rem;
+  color: #ffcc88;
+  margin-top: 0.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+#sky-deeptime-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg,
+    rgba(180, 80, 80, 0.35) 0%,
+    rgba(80, 80, 100, 0.35) 50%,
+    rgba(80, 140, 200, 0.35) 100%);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+#sky-deeptime-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #ffd700;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px #000, 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+#sky-deeptime-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: #ffd700;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 2px #000, 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+.sky-deeptime-presets {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  font-size: 0.55rem;
+}
+
+.sky-preset-btn {
+  background: rgba(15, 18, 28, 0.7);
+  color: #aaa;
+  border: 1px solid #25253a;
+  border-radius: 3px;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  font-size: 0.55rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.sky-preset-btn:hover { color: #fff; border-color: #44aaff; }
+.sky-preset-btn .preset-year { color: #88aaff; font-weight: 500; margin-right: 0.3rem; }
+.sky-preset-btn .preset-event { color: #888; font-size: 0.5rem; }
+
+.sky-preset-btn.active { color: #ffd700; border-color: #ffd700; }
+.sky-preset-btn.active .preset-year { color: #ffd700; }
+
+.sky-legend {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  font-size: 0.55rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ============================================
+   CELESTIAL NAVIGATION SOLVER
+   Sextant-style position fixing on the world map
+   ============================================ */
+.celnav-card {
+  margin-top: 1.2rem;
+  padding: 1.2rem;
+  position: relative;
+}
+
+.celnav-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 0.6rem;
+}
+
+@media (max-width: 1100px) {
+  .celnav-grid { grid-template-columns: 1fr; }
+}
+
+.celnav-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.celnav-form-row {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.62rem;
+}
+
+.celnav-form-row > label {
+  color: #888;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.55rem;
+}
+
+.celnav-form-row select,
+.celnav-form-row input[type="text"],
+.celnav-form-row input[type="number"] {
+  background: rgba(15, 18, 28, 0.85);
+  color: #ddd;
+  border: 1px solid #25253a;
+  border-radius: 3px;
+  padding: 0.32rem 0.5rem;
+  font: inherit;
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.celnav-form-row select:focus,
+.celnav-form-row input:focus {
+  outline: none;
+  border-color: #44aaff;
+}
+
+.celnav-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.celnav-btn {
+  background: rgba(20, 20, 30, 0.85);
+  color: #aaa;
+  border: 1px solid #25253a;
+  border-radius: 3px;
+  padding: 0.3rem 0.7rem;
+  font: inherit;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.celnav-btn:hover { color: #fff; border-color: #44aaff; }
+.celnav-btn-primary {
+  background: rgba(40, 80, 140, 0.4);
+  color: #aacfff;
+  border-color: #44aaff;
+}
+.celnav-btn-primary:hover { background: rgba(60, 120, 200, 0.5); color: #fff; }
+
+.celnav-collapse {
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.55rem;
+  color: #666;
+  margin-top: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.celnav-collapse:hover { color: #aaa; }
+.celnav-corrections.collapsed { display: none; }
+
+.celnav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 0.3rem;
+}
+
+.celnav-list-empty {
+  color: #555;
+  font-size: 0.62rem;
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+.celnav-row {
+  display: grid;
+  grid-template-columns: 14px 1fr 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  background: rgba(15, 18, 28, 0.5);
+  border: 1px solid #1c1c2c;
+  border-radius: 3px;
+  font-size: 0.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.celnav-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.celnav-row-body { color: #ddd; font-weight: 500; }
+.celnav-row-info { color: #888; font-size: 0.55rem; }
+.celnav-row-time { color: #666; font-size: 0.55rem; }
+.celnav-row-remove {
+  color: #555;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0 4px;
+}
+.celnav-row-remove:hover { color: #ff6677; }
+
+.celnav-fix-result {
+  margin-top: 0.8rem;
+  padding: 0.7rem 0.9rem;
+  background: rgba(20, 50, 90, 0.25);
+  border: 1px solid rgba(80, 160, 240, 0.3);
+  border-radius: 4px;
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+}
+.celnav-fix-result.empty { background: none; border: 1px dashed #25253a; color: #555; }
+.celnav-fix-result-title {
+  color: #88aaff;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+.celnav-fix-coord { font-size: 0.95rem; color: #fff; font-weight: 300; letter-spacing: 0.04em; }
+.celnav-fix-residual { color: #888; font-size: 0.55rem; margin-top: 0.3rem; }
+
+.celnav-cop-line {
+  fill: none;
+  stroke-width: 1.3;
+  pointer-events: none;
+  vector-effect: non-scaling-stroke;
+}
+.celnav-cop-gp {
+  pointer-events: none;
+}
+.celnav-fix-marker {
+  fill: #ffcc44;
+  stroke: #fff;
+  stroke-width: 2;
+  pointer-events: none;
+}
+.celnav-fix-marker-cross {
+  stroke: #fff;
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+.celnav-fix-ambig {
+  fill: rgba(255, 100, 80, 0.35);
+  stroke: rgba(255, 130, 100, 0.7);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
 }
 
 /* Subsolar point */
@@ -721,6 +1304,16 @@ h1 {
 .sunrise-tooltip .polar-note {
   color: #ff8844;
   font-style: italic;
+}
+
+.sunrise-tooltip .tooltip-section-title {
+  color: #44aaff;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 0.45rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid #1a1a2e;
 }
 
 /* ============================================
@@ -882,6 +1475,28 @@ h1 {
         </div>
       </div>
 
+      <div class="card barycenter-card">
+        <div class="card-title">solar system barycenter</div>
+        <div class="barycenter-panel">
+          <svg class="barycenter-svg" id="barycenter-svg" viewBox="-30 -30 60 60"></svg>
+          <div class="barycenter-info">
+            <div class="bary-label" id="bary-status">computing…</div>
+            <div class="bary-distance" id="bary-distance">—</div>
+            <div class="bary-explain">the Sun wobbles around the system's center of mass — Jupiter pulls hardest</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">upcoming conjunctions</div>
+        <div class="conjunction-list" id="conjunction-list">computing…</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">comets</div>
+        <div class="comets-list" id="comets-list">computing…</div>
+      </div>
+
       <div class="card">
         <div class="card-title">heliocentric state</div>
         <div class="info-panel" id="info-panel"></div>
@@ -903,11 +1518,12 @@ h1 {
 
   <!-- World map: subsolar point (where the sun is overhead) + day/night
        terminator + upcoming solar eclipse track midpoints -->
-  <div class="card world-card">
+  <div class="card world-card" style="position:relative">
     <div class="card-title-row">
       <div class="card-title">earth · subsolar point &amp; upcoming solar eclipses</div>
       <div class="world-readout" id="world-readout">—</div>
     </div>
+    <button class="magnetic-toggle" id="magnetic-toggle" type="button">show declination</button>
     <svg class="world-map" id="world-map" viewBox="0 0 1600 800" preserveAspectRatio="xMidYMid meet"></svg>
     <div class="sunrise-tooltip" id="sunrise-tooltip"></div>
     <div class="world-legend">
@@ -916,6 +1532,183 @@ h1 {
       <span><span class="legend-swatch" style="background:#1a1a30"></span>night side</span>
       <span><span class="legend-swatch" style="background:#ff4444"></span>upcoming solar eclipse</span>
       <span style="color:#666">— — moon-above-horizon boundary</span>
+      <span class="legend-magnetic" style="display:none"><span class="legend-swatch" style="background:#ff5566"></span>agonic line (D=0)</span>
+    </div>
+  </div>
+
+  <!-- Sky chart — circular projection of the visible sky from a chosen
+       observer location (defaults to ~middle latitude until user clicks
+       the world map). Click the world map to recenter. -->
+  <div class="card sky-card" style="position:relative">
+    <div class="card-title-row">
+      <div class="card-title">visible sky from <span id="sky-observer-label">40.0°N, 74.0°W</span></div>
+      <div class="sky-readout" id="sky-readout">— stars · — visible</div>
+    </div>
+    <div class="sky-controls">
+      <button class="sky-btn" id="sky-btn-realtime" data-mode="realtime">live</button>
+      <button class="sky-btn" id="sky-btn-deeptime" data-mode="deeptime">deep time</button>
+      <span class="sky-help">click the world map to change observer</span>
+    </div>
+
+    <div class="sky-deeptime-panel" id="sky-deeptime-panel">
+      <div class="sky-deeptime-explain">
+        Earth's axis wobbles like a slow-spinning top — one full circle around the ecliptic pole every
+        <b>25,772 years</b>. Drag the slider to watch the night sky from any moment in human history,
+        or far into the future. The slider spans <b>two full precession cycles</b> (~52,000 years), so
+        you can see the loop close and start over: the pole returns exactly to Polaris.
+      </div>
+      <div class="sky-deeptime-explain" style="border-left:2px solid #44aaff;padding-left:0.6rem;color:#aab">
+        <b style="color:#ccd6ff">What's it for?</b> Archaeoastronomy: the Great Pyramid's "star shafts"
+        point at where Thuban (the pole star of ~2700 BCE) sat in the sky — a fact only computable by
+        running precession backward. Greek myths reference Kochab as "the dog's tail" pointing north
+        because Polaris wasn't yet near the pole. And in 13,727 CE Earth's axis will point at Vega —
+        an exquisite, magnitude-0.0 pole star far brighter than anything available now. This panel
+        runs those calculations from first principles.
+      </div>
+      <div class="sky-deeptime-explain" style="border-left:2px solid #ffaa44;padding-left:0.6rem;color:#aab;font-size:0.55rem">
+        <b style="color:#ffd699">Sidereal time is locked</b> while you scrub. You're watching the sky
+        at the same instant of <i>Earth's daily rotation</i> as right now, with only the slow effects
+        of precession (Earth's wobble, ~0.014°/yr) and stellar proper motion accumulating across
+        millennia. Without this lock, the 360°/day diurnal rotation would completely swamp the
+        ~50″/yr precession we're trying to show.
+      </div>
+      <div class="sky-deeptime-slider-row">
+        <div style="color:#888;font-size:0.55rem;text-align:right;font-variant-numeric:tabular-nums">
+          −26,000 yr<br/><span style="color:#666">~24 000 BCE</span>
+        </div>
+        <div>
+          <input type="range" id="sky-deeptime-slider"
+                 min="-26000" max="26000" step="25" value="0" />
+          <div class="sky-deeptime-readout" id="sky-deeptime-readout">year 2026 · now</div>
+          <div class="sky-deeptime-pole" id="sky-deeptime-pole">pole star: Polaris (0.7° from pole)</div>
+        </div>
+        <div style="color:#888;font-size:0.55rem;font-variant-numeric:tabular-nums">
+          +26,000 yr<br/><span style="color:#666">~28 000 CE</span>
+        </div>
+      </div>
+      <div class="sky-deeptime-presets" id="sky-deeptime-presets">
+        <button class="sky-preset-btn" data-yr="-12300"><span class="preset-year">−10 274 BCE</span><span class="preset-event">Vega last reigned</span></button>
+        <button class="sky-preset-btn" data-yr="-4700"><span class="preset-year">−2674 BCE</span><span class="preset-event">Thuban · pyramids built</span></button>
+        <button class="sky-preset-btn" data-yr="-1000"><span class="preset-year">1026 CE</span><span class="preset-event">Kochab era</span></button>
+        <button class="sky-preset-btn active" data-yr="0"><span class="preset-year">now</span><span class="preset-event">Polaris</span></button>
+        <button class="sky-preset-btn" data-yr="2000"><span class="preset-year">+4026 CE</span><span class="preset-event">Errai γ Cep</span></button>
+        <button class="sky-preset-btn" data-yr="5500"><span class="preset-year">+7526 CE</span><span class="preset-event">Alderamin α Cep</span></button>
+        <button class="sky-preset-btn" data-yr="11700"><span class="preset-year">+13 726 CE</span><span class="preset-event">Vega ★ brightest ever</span></button>
+        <button class="sky-preset-btn" data-yr="25772"><span class="preset-year">+27 798 CE</span><span class="preset-event">full cycle · Polaris returns</span></button>
+      </div>
+    </div>
+
+    <canvas id="sky-canvas" width="700" height="700"></canvas>
+    <div class="sky-time-info" id="sky-time-info"></div>
+    <div class="sky-legend">
+      <span style="color:#aaa">color: <span style="color:#88aaff">B</span> <span style="color:#fff8e0">A</span> <span style="color:#fff5d0">F</span> <span style="color:#fff0c0">G</span> <span style="color:#ffd0a0">K</span> <span style="color:#ff8866">M</span></span>
+      <span style="color:#666">size scales with brightness · zenith at center · horizon at edge</span>
+    </div>
+  </div>
+
+  <!-- Celestial navigation solver. Adds observations (body + time +
+       observed altitude) and resolves them into a position fix on the
+       world map via circle-of-position intersection. -->
+  <div class="card celnav-card">
+    <div class="card-title">celestial navigation solver — sextant fix from circles of position</div>
+    <div style="color:#666;font-size:0.6rem;margin-top:0.3rem">
+      every altitude observation defines a small circle on Earth (radius = 90° − Ho, center = body's geographic position).
+      two circles intersect at two points; three+ resolve a unique fix. this is the entire basis of pre-GPS navigation.
+    </div>
+
+    <div class="celnav-grid">
+      <!-- LEFT: observation entry form -->
+      <div>
+        <div class="celnav-form">
+          <div class="celnav-form-row">
+            <label>body</label>
+            <select id="celnav-body">
+              <optgroup label="solar system">
+                <option value="sun">Sun</option>
+                <option value="moon">Moon</option>
+                <option value="venus">Venus</option>
+                <option value="mars">Mars</option>
+                <option value="jupiter">Jupiter</option>
+                <option value="saturn">Saturn</option>
+                <option value="mercury">Mercury</option>
+              </optgroup>
+              <optgroup label="navigation stars" id="celnav-stars-optgroup">
+                <!-- populated from NAV_STARS at boot -->
+              </optgroup>
+            </select>
+          </div>
+          <div class="celnav-form-row">
+            <label>UT time</label>
+            <input type="text" id="celnav-time" placeholder="now (or YYYY-MM-DD HH:MM:SS)" />
+          </div>
+          <div class="celnav-form-row">
+            <label>Ho (deg)</label>
+            <input type="number" step="0.0001" id="celnav-ho" placeholder="e.g. 42.7250" />
+          </div>
+          <div class="celnav-form-row">
+            <label>DR lat</label>
+            <input type="number" step="0.1" id="celnav-dr-lat" placeholder="optional, for ambiguity" />
+          </div>
+          <div class="celnav-form-row">
+            <label>DR lon</label>
+            <input type="number" step="0.1" id="celnav-dr-lon" placeholder="optional" />
+          </div>
+
+          <div class="celnav-collapse" id="celnav-corrections-toggle">
+            ▸ sextant corrections (Hs → Ho)
+          </div>
+          <div class="celnav-corrections collapsed" id="celnav-corrections-block">
+            <div class="celnav-form-row">
+              <label>Hs (deg)</label>
+              <input type="number" step="0.0001" id="celnav-hs" placeholder="raw sextant reading" />
+            </div>
+            <div class="celnav-form-row">
+              <label>limb</label>
+              <select id="celnav-limb">
+                <option value="center">center</option>
+                <option value="lower">lower limb (Sun/Moon)</option>
+                <option value="upper">upper limb</option>
+              </select>
+            </div>
+            <div class="celnav-form-row">
+              <label>height eye (m)</label>
+              <input type="number" step="0.5" id="celnav-heye" value="2" />
+            </div>
+            <div class="celnav-form-row">
+              <label>IC (arcmin)</label>
+              <input type="number" step="0.1" id="celnav-ic" value="0" />
+            </div>
+            <div class="celnav-form-row">
+              <label></label>
+              <button class="celnav-btn" id="celnav-apply-corrections">apply corrections → fill Ho</button>
+            </div>
+            <div style="color:#666;font-size:0.55rem;line-height:1.5;margin-top:0.3rem">
+              applies index error, dip (0.0293·√h_eye°), bennett refraction, Sun/Moon semidiameter, and Moon parallax
+            </div>
+          </div>
+
+          <div class="celnav-buttons">
+            <button class="celnav-btn celnav-btn-primary" id="celnav-add">add observation</button>
+            <button class="celnav-btn" id="celnav-sample">sample 3-star fix</button>
+            <button class="celnav-btn" id="celnav-clear">clear</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: observation list + fix result -->
+      <div>
+        <div style="color:#888;font-size:0.55rem;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem">
+          observations
+        </div>
+        <div class="celnav-list" id="celnav-list">
+          <div class="celnav-list-empty">no observations yet — add one above, or load the sample fix</div>
+        </div>
+
+        <div class="celnav-fix-result empty" id="celnav-fix">
+          <div class="celnav-fix-result-title">computed fix</div>
+          <div style="color:#666">add at least 2 observations</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -943,10 +1736,14 @@ h1 {
 <!-- Full-precision astronomical series, loaded as separate files for readability.
      vsop87_data.js  → ~1.5 MB, full VSOP87B (35,080 terms) for the 8 major planets
      ElpMpp02LLR_min.js → ~2.6 MB, full ELP/MPP02 LLR (35,901 terms) for the Moon
-     world_land.js   → 70 KB, Natural Earth 1:110m landmass for the world map -->
+     world_land.js   → 70 KB, Natural Earth 1:110m landmass for the world map
+     comets_data.js  → 2 KB, JPL Horizons elements for 12 famous comets -->
 <script src="vsop87_data.js"></script>
 <script src="ElpMpp02LLR_min.js"></script>
 <script src="world_land.js"></script>
+<script src="comets_data.js"></script>
+<script src="igrf_coeffs.js"></script>
+<script src="stars_hip.js"></script>
 
 <script>
 // ============================================================
@@ -1370,6 +2167,26 @@ const PLANET_ELEMENTS = {
   pluto:   [39.48686035, 0.00449751, 0.24885238, 0.00006016, 17.14104260, 0.00000501, 238.96535011, 145.18042903, 224.09702598, -0.00968827, 110.30167986, -0.00809981]
 };
 
+// Planet GM/Sun GM ratios from IAU 2015 nominal values + JPL DE440.
+// These are the inverse mass ratios used in DE440 ephemeris construction —
+// known to ~10 significant digits from spacecraft tracking. The Earth-Moon
+// system is treated as a single barycenter (m_em = m_earth + m_moon).
+// Source: https://ssd.jpl.nasa.gov/astro_par.html (DE440 fitted values)
+const PLANET_MASS_RATIO = {
+  mercury: 1 / 6023657.94,
+  venus:   1 / 408523.7186,
+  earth:   1 / 332946.0487 * (1 + 1/81.300569),  // Earth + Moon (treated as bary point)
+  mars:    1 / 3098703.59,
+  jupiter: 1 / 1047.348644,
+  saturn:  1 / 3497.9018,
+  uranus:  1 / 22902.951,
+  neptune: 1 / 19412.260,
+  pluto:   1 / 136045000   // Pluto+Charon system mass
+};
+
+// Solar radius: 695,700 km / 149,597,870.7 km/AU = 4.6505e-3 AU
+const SOLAR_RADIUS_AU = 4.6505e-3;
+
 // Table 2b: extra terms in Mean Anomaly for outer planets [b, c, s, f]
 const PLANET_PERTURBATIONS = {
   jupiter: [-0.00012452, 0.06064060, -0.35635438, 38.35125000],
@@ -1533,6 +2350,365 @@ function computePlanetPos(planetKey, T) {
     return computePlanetPosVSOP(planetKey, T);
   }
   return computePlanetPosKeplerian(planetKey, T);
+}
+
+// ============================================================
+// GEOMAGNETIC FIELD — IGRF-13 spherical harmonic synthesis.
+// Given (geodetic_lat, geodetic_lon, year), returns local field
+// components in nT and derived quantities:
+//   { D: declination (deg, +east of true north),
+//     I: inclination (deg, +down),
+//     H: horizontal intensity, F: total intensity, X, Y, Z }
+//
+// Algorithm:
+// 1. Geodetic → geocentric spherical (WGS84): correct for Earth's flattening
+// 2. Time-evolve the IGRF coefficients: G(t) = G(2020) + SV·(t-2020) for n≤8
+// 3. Compute Schmidt semi-normalized associated Legendre functions P_n^m(cos θ)
+//    via the standard recursion (in cos θ).
+// 4. Sum the harmonic series for the geomagnetic potential V, then take
+//    its negative gradient to get the field components in geocentric frame.
+// 5. Rotate from geocentric back to geodetic coords for X (north), Y (east),
+//    Z (down).
+//
+// References: BGS / NCEI software guide, Maus et al. 2015.
+// ============================================================
+
+// Time-evolve the coefficients to the requested year (only n=1..8 have SV)
+function _igrfCoeffsAtYear(year) {
+  const dt = year - IGRF_EPOCH_YEAR;
+  const g = [];
+  const h = [];
+  for (let n = 0; n <= IGRF_NMAX; n++) {
+    const gRow = [];
+    const hRow = [];
+    for (let m = 0; m <= n; m++) {
+      let g0 = (IGRF_G[n] && IGRF_G[n][m] !== undefined) ? IGRF_G[n][m] : 0;
+      let h0 = (IGRF_H[n] && IGRF_H[n][m] !== undefined) ? IGRF_H[n][m] : 0;
+      if (n <= 8 && IGRF_SV_G[n] && IGRF_SV_G[n][m] !== undefined) {
+        g0 += IGRF_SV_G[n][m] * dt;
+      }
+      if (n <= 8 && IGRF_SV_H[n] && IGRF_SV_H[n][m] !== undefined) {
+        h0 += IGRF_SV_H[n][m] * dt;
+      }
+      gRow.push(g0);
+      hRow.push(h0);
+    }
+    g.push(gRow);
+    h.push(hRow);
+  }
+  return { g, h };
+}
+
+// Compute Schmidt semi-normalized associated Legendre functions P_n^m(cos θ)
+// AND their derivatives dP_n^m / dθ. Returns 2D arrays [n][m].
+function _schmidtLegendre(theta, NMAX) {
+  const ct = Math.cos(theta);
+  const st = Math.sin(theta);
+
+  const P = [];   // P[n][m]
+  const dP = [];  // dP[n][m] / dθ
+  for (let n = 0; n <= NMAX; n++) {
+    P.push(new Array(n + 1).fill(0));
+    dP.push(new Array(n + 1).fill(0));
+  }
+
+  // Seed: P[0][0] = 1, dP[0][0] = 0
+  P[0][0] = 1;
+  dP[0][0] = 0;
+
+  // Recursion from BGS / Davis 2004 — Schmidt semi-normalized form:
+  //   P[n][n] = sin(θ) · sqrt((2n-1)/(2n)) · P[n-1][n-1]   for n ≥ 1
+  //   P[n][m] = (1 / sqrt(n²-m²)) · ((2n-1)·cos(θ)·P[n-1][m] - sqrt((n-1)²-m²)·P[n-2][m])
+  // Special case for n=1, m=0: P[1][0] = cos(θ)
+  // We compute derivatives by the same recursion applied to dP, except:
+  //   d(P[n][n]) = sin·sqrt((2n-1)/(2n))·dP[n-1][n-1] + cos·sqrt((2n-1)/(2n))·P[n-1][n-1]
+  //   d(P[n][m]) using the cos·P term gets a -sin·P contribution when differentiated
+  //
+  // Then apply Schmidt semi-normalization adjustment for m=1: multiply by sqrt(2)/1
+  // — but in the form given above (BGS recurrence) the result is already Schmidt.
+
+  for (let n = 1; n <= NMAX; n++) {
+    for (let m = 0; m <= n; m++) {
+      if (n === m) {
+        // Diagonal term: P[n][n]
+        if (n === 1) {
+          P[1][1] = st;
+          dP[1][1] = ct;
+        } else {
+          const k = Math.sqrt((2 * n - 1) / (2 * n));
+          P[n][n] = st * k * P[n - 1][n - 1];
+          dP[n][n] = ct * k * P[n - 1][n - 1] + st * k * dP[n - 1][n - 1];
+        }
+      } else {
+        // Off-diagonal: P[n][m]
+        const denom = Math.sqrt(n * n - m * m);
+        const factA = (2 * n - 1) / denom;
+        let factB = 0;
+        if (n >= 2) {
+          factB = Math.sqrt((n - 1) * (n - 1) - m * m) / denom;
+        }
+        const Pnm1 = P[n - 1] && P[n - 1][m] !== undefined ? P[n - 1][m] : 0;
+        const dPnm1 = dP[n - 1] && dP[n - 1][m] !== undefined ? dP[n - 1][m] : 0;
+        const Pnm2 = (n >= 2 && P[n - 2] && P[n - 2][m] !== undefined) ? P[n - 2][m] : 0;
+        const dPnm2 = (n >= 2 && dP[n - 2] && dP[n - 2][m] !== undefined) ? dP[n - 2][m] : 0;
+
+        P[n][m] = factA * ct * Pnm1 - factB * Pnm2;
+        dP[n][m] = factA * (ct * dPnm1 - st * Pnm1) - factB * dPnm2;
+      }
+    }
+  }
+
+  return { P, dP };
+}
+
+// Compute IGRF-13 magnetic field at given geodetic location & time.
+// Inputs: geodetic latitude (deg, +N), longitude (deg, +E), altitude (km, default 0),
+//         decimal year. Returns components in nT plus declination/inclination in deg.
+function igrfFieldAt(latDeg, lonDeg, altKm, year) {
+  if (typeof IGRF_G === 'undefined') return null;
+
+  // Step 1: Geodetic → geocentric (WGS84 ellipsoid)
+  // a = 6378.137 km, b = 6356.7523142 km, f = 1/298.257223563
+  const a = 6378.137, b = 6356.7523142;
+  const a2 = a * a, b2 = b * b;
+  const lat = latDeg * D2R;
+  const lon = lonDeg * D2R;
+  const sinLat = Math.sin(lat), cosLat = Math.cos(lat);
+  const ah2 = a2 * cosLat * cosLat + b2 * sinLat * sinLat;
+  const ah = Math.sqrt(ah2);
+  const c1 = altKm + ah2 / a;       // intermediate
+  const c2 = altKm + ah2 / b;
+  const r = Math.sqrt(c1 * c1 * cosLat * cosLat + c2 * c2 * sinLat * sinLat);
+  // Geocentric colatitude
+  const sinTheta = c1 * cosLat / r;
+  const cosTheta = c2 * sinLat / r;
+  const theta = Math.atan2(sinTheta, cosTheta);
+
+  // Difference between geodetic and geocentric latitude (used to rotate field
+  // back at the end). psi = geodetic_lat - geocentric_lat = lat - (π/2 - theta)
+  const psi = lat - (Math.PI / 2 - theta);
+  const sinPsi = Math.sin(psi), cosPsi = Math.cos(psi);
+
+  // Step 2: time-evolve coefficients
+  const { g, h } = _igrfCoeffsAtYear(year);
+
+  // Step 3: Schmidt semi-normalized Legendre functions
+  const { P, dP } = _schmidtLegendre(theta, IGRF_NMAX);
+
+  // Step 4: Sum the series. Geocentric components Br, Bθ, Bφ.
+  // Potential V = a · Σ_n (a/r)^(n+1) · Σ_m (g cos(mφ) + h sin(mφ)) · P_n^m
+  // → Br = -∂V/∂r =  Σ_n (n+1)·(a/r)^(n+2) · (g·cosmφ + h·sinmφ) · P_n^m
+  // → Bθ = -(1/r)·∂V/∂θ = -Σ_n (a/r)^(n+2) · (g·cosmφ + h·sinmφ) · dP_n^m/dθ
+  // → Bφ = -(1/(r·sinθ))·∂V/∂φ = -(1/sinθ)·Σ_n (a/r)^(n+2)·m·(-g·sinmφ + h·cosmφ)·P_n^m
+  let Br = 0, Bt = 0, Bp = 0;
+  const ar = a / r;
+  let arPow = ar * ar;  // (a/r)^2 — start at n=1 → (a/r)^(n+2) = (a/r)^3
+  // We'll build (a/r)^(n+2) iteratively by multiplying by (a/r) each n
+  arPow = ar * ar * ar;  // (a/r)^3 for n=1
+  for (let n = 1; n <= IGRF_NMAX; n++) {
+    let SrSum = 0, StSum = 0, SpSum = 0;
+    for (let m = 0; m <= n; m++) {
+      const cosM = Math.cos(m * lon);
+      const sinM = Math.sin(m * lon);
+      const gnm = g[n][m];
+      const hnm = h[n][m];
+      const Pnm = P[n][m];
+      const dPnm = dP[n][m];
+      const ghCos = gnm * cosM + hnm * sinM;
+      const ghSin = -gnm * sinM + hnm * cosM;
+      SrSum += ghCos * Pnm;
+      StSum += ghCos * dPnm;
+      SpSum += m * ghSin * Pnm;
+    }
+    Br += (n + 1) * arPow * SrSum;
+    Bt += -arPow * StSum;
+    if (Math.abs(Math.sin(theta)) > 1e-10) {
+      Bp += -arPow * SpSum / Math.sin(theta);
+    }
+    arPow *= ar;  // next iteration: (a/r)^(n+3)
+  }
+
+  // Step 5: Rotate Br, Bθ to geodetic frame (X = north, Z = down).
+  // Geocentric → geodetic via the angle ψ between the two latitude systems.
+  // X_geodetic =  Bθ · cos(ψ) + Br · sin(ψ)   (note: Bθ is southward)
+  //   → North (X): -Bθ·cos(ψ) + Br·sin(ψ)... actually:
+  // In standard convention: X (geodetic north) = -Bθ cos ψ - Br sin ψ
+  //                         Z (geodetic down) = -Bθ sin ψ + Br cos ψ — wait
+  //
+  // Let's re-derive: in geocentric local frame, the unit vectors are:
+  //   r̂ (outward), θ̂ (south, increasing colatitude), φ̂ (east).
+  // In geodetic local frame: x̂ (north), ŷ (east), ẑ (down, -outward).
+  // The rotation between (-θ̂ = north_geocentric) and x̂ is the angle ψ.
+  // North vector north_geocentric · ψ rotation gives:
+  //   x̂ = cos(ψ)·(-θ̂) + sin(ψ)·(-r̂)   (geodetic north tilts toward geocenter)
+  //   ẑ = sin(ψ)·θ̂  + cos(ψ)·(-r̂)     (down)
+  //   ŷ = φ̂                             (east unchanged)
+  // So: X = -Bt·cos(ψ) - Br·sin(ψ)
+  //     Z = -Br·cos(ψ) + Bt·sin(ψ)        (down positive)
+  //     Y = Bp
+  // Where Bt is along θ̂ (southward), so X (north) = -Bt projected component.
+  const X = -Bt * cosPsi - Br * sinPsi;
+  const Y = Bp;
+  const Z = -Br * cosPsi + Bt * sinPsi;
+  const H = Math.sqrt(X * X + Y * Y);
+  const F = Math.sqrt(X * X + Y * Y + Z * Z);
+  const D = Math.atan2(Y, X) * R2D;        // declination, +east
+  const I = Math.atan2(Z, H) * R2D;        // inclination, +down
+
+  return { X, Y, Z, H, F, D, I };
+}
+
+// Convert an IGRF declination (deg) to a human-readable string.
+// Positive → east of true north, negative → west.
+function fmtDeclination(D) {
+  const absD = Math.abs(D);
+  const degInt = Math.floor(absD);
+  const minInt = Math.round((absD - degInt) * 60);
+  const dir = D >= 0 ? 'E' : 'W';
+  return `${degInt}°${String(minInt).padStart(2, '0')}'\u00A0${dir}`;
+}
+
+// ============================================================
+// COMET POSITION — works for elliptical, near-parabolic, and hyperbolic.
+// Given osculating elements {q, e, I, Om, w, Tp [, period]} and target JD,
+// returns heliocentric ecliptic (x, y, z, r) in AU.
+//
+// Mean motion n (rad/day):
+//   elliptical (e<1):  n = k · a^(-3/2)  with a = q/(1-e)
+//   hyperbolic (e>1):  n = k · |a|^(-3/2) with a = -q/(e-1) > 0 in magnitude
+// where k = 0.01720209895 rad/day (Gauss gravitational constant in AU^(3/2)/day).
+//
+// Anomaly equations:
+//   elliptical:       M = E - e·sin(E)             →  Newton-Raphson for E
+//   hyperbolic:       M = e·sinh(H) - H            →  Newton-Raphson for H
+//   parabolic (e=1):  M = D + D³/3, D=tan(ν/2)     →  Barker's equation, closed form
+// ============================================================
+const GAUSS_K = 0.01720209895;  // rad/day · AU^(3/2)
+
+function _solveHyperbolic(M, e) {
+  // Newton-Raphson on f(H) = e·sinh(H) - H - M
+  // Initial guess: for moderate M, H ≈ ln(2|M|/e + 1.8) * sign(M)
+  let H = Math.sign(M) * Math.log(2 * Math.abs(M) / e + 1.8);
+  for (let i = 0; i < 50; i++) {
+    const f = e * Math.sinh(H) - H - M;
+    const fp = e * Math.cosh(H) - 1;
+    const dH = -f / fp;
+    H += dH;
+    if (Math.abs(dH) < 1e-12) break;
+  }
+  return H;
+}
+
+function _solveBarker(M) {
+  // Barker's equation: M = D + D³/3, where D = tan(ν/2)
+  // Closed-form via cubic: D = ∛(3M/2 + √(1 + (3M/2)²)) - ∛(...negative branch)
+  const W = 1.5 * M;
+  const u = Math.cbrt(W + Math.sqrt(1 + W * W));
+  return u - 1 / u;  // returns D = tan(ν/2)
+}
+
+function computeCometPos(comet, jdTT) {
+  const dt = jdTT - comet.Tp;  // days from perihelion
+  const e = comet.e;
+  let nu;  // true anomaly (rad)
+  let r;   // distance from Sun (AU)
+
+  if (e < 0.999) {
+    // Elliptical
+    const a = comet.q / (1 - e);
+    const n = GAUSS_K * Math.pow(a, -1.5);  // rad/day
+    let M = n * dt;
+    // Wrap M into [-π, π] for stability
+    M = ((M % (2 * Math.PI)) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+    const E = solveKepler(M, e);
+    nu = 2 * Math.atan2(Math.sqrt(1 + e) * Math.sin(E / 2),
+                        Math.sqrt(1 - e) * Math.cos(E / 2));
+    r = a * (1 - e * Math.cos(E));
+  } else if (e > 1.001) {
+    // Hyperbolic
+    const a = comet.q / (e - 1);  // |a|
+    const n = GAUSS_K * Math.pow(a, -1.5);
+    const M = n * dt;
+    const H = _solveHyperbolic(M, e);
+    nu = 2 * Math.atan2(Math.sqrt(e + 1) * Math.sinh(H / 2),
+                        Math.sqrt(e - 1) * Math.cosh(H / 2));
+    r = a * (e * Math.cosh(H) - 1);
+  } else {
+    // Near-parabolic — Barker
+    const M = GAUSS_K * Math.sqrt(2 / (comet.q * comet.q * comet.q)) * dt / 2;
+    const D = _solveBarker(M);
+    nu = 2 * Math.atan(D);
+    r = comet.q * (1 + D * D);
+  }
+
+  // Position in the orbital plane
+  const xp = r * Math.cos(nu);
+  const yp = r * Math.sin(nu);
+
+  // Rotate to heliocentric ecliptic (J2000)
+  // Rotation chain: orbital plane → (Ω, I, ω) → ecliptic
+  const cw = Math.cos(comet.w * D2R), sw = Math.sin(comet.w * D2R);
+  const cO = Math.cos(comet.Om * D2R), sO = Math.sin(comet.Om * D2R);
+  const cI = Math.cos(comet.I * D2R), sI = Math.sin(comet.I * D2R);
+  const x = (cw * cO - sw * sO * cI) * xp + (-sw * cO - cw * sO * cI) * yp;
+  const y = (cw * sO + sw * cO * cI) * xp + (-sw * sO + cw * cO * cI) * yp;
+  const z = (sw * sI) * xp + (cw * sI) * yp;
+
+  return {
+    x, y, z, r,
+    lon: wrapDeg(Math.atan2(y, x) * R2D),
+    lat: Math.asin(z / r) * R2D,
+    nu  // true anomaly (radians) — useful for tail direction
+  };
+}
+
+// Predict the next perihelion JD for a periodic comet (or the elements'
+// epoch perihelion if the comet has no period).
+function nextPerihelionJD(comet, currentJD) {
+  if (!comet.period || comet.period <= 0) {
+    return comet.Tp >= currentJD ? comet.Tp : null;
+  }
+  const periodDays = comet.period * 365.25;
+  let tp = comet.Tp;
+  while (tp < currentJD - 30) tp += periodDays;  // -30d so we don't skip a comet at perihelion right now
+  return tp;
+}
+
+// ============================================================
+// SOLAR SYSTEM BARYCENTER
+// The Sun orbits the system's center of mass — a complex multi-lobed
+// path dominated by Jupiter (~12-yr cycle), modulated by Saturn (~29-yr).
+// Sometimes the SSB sits inside the Sun's photosphere, sometimes outside
+// by up to ~2 solar radii. This is exactly the wobble astronomers measure
+// to detect exoplanets via radial velocity.
+//
+// Formula (heliocentric → barycentric origin offset):
+//   B = Σᵢ μᵢ · rᵢ / (1 + Σᵢ μᵢ)
+// where μᵢ = mᵢ/M_sun and rᵢ is heliocentric position of body i.
+// (The 1 + Σμᵢ in the denominator normalizes by total system mass / M_sun.)
+// ============================================================
+function computeBarycenter(planets) {
+  let bx = 0, by = 0, bz = 0, mtot = 0;
+  for (const key in PLANET_MASS_RATIO) {
+    const p = planets[key];
+    if (!p) continue;
+    const mu = PLANET_MASS_RATIO[key];
+    bx += mu * p.x;
+    by += mu * p.y;
+    bz += mu * p.z;
+    mtot += mu;
+  }
+  // Position of barycenter measured from Sun center, in AU.
+  // Divide by (1 + Σμ) since the Sun also has mass — the ratio
+  // m_sun / M_total appears in the weighted average.
+  const denom = 1 + mtot;
+  bx /= denom; by /= denom; bz /= denom;
+  const r = Math.sqrt(bx * bx + by * by + bz * bz);
+  return {
+    x: bx, y: by, z: bz, r,           // AU
+    rSolar: r / SOLAR_RADIUS_AU,       // in solar radii
+    insideSun: r < SOLAR_RADIUS_AU
+  };
 }
 
 // ============================================================
@@ -2103,6 +3279,180 @@ function findUpcomingSolarEclipses(currentJD, count) {
   return out;
 }
 
+// ============================================================
+// CONJUNCTION & TRANSIT SCANNER
+// "Conjunction" = two planets appear close together in Earth's sky.
+// We compute the geocentric direction vector to each planet, then the
+// angular separation: cos(θ) = (â · b̂). Scan forward at coarse steps,
+// then refine with bisection to find the exact minimum.
+//
+// The geocentric vector is just (helio_planet - helio_earth). This is
+// the "geometric" position; we don't apply light-time or aberration
+// corrections (they shift positions by < 1 arcmin, well below the
+// thresholds we care about for naked-eye conjunctions).
+// ============================================================
+
+// Return geocentric (x, y, z) of a planet in J2000 ecliptic AU.
+function _geoVec(planetPos, earthPos) {
+  return {
+    x: planetPos.x - earthPos.x,
+    y: planetPos.y - earthPos.y,
+    z: planetPos.z - earthPos.z
+  };
+}
+
+// Angular separation in radians between two non-zero vectors.
+function _angSep(a, b) {
+  const am = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+  const bm = Math.sqrt(b.x * b.x + b.y * b.y + b.z * b.z);
+  if (am === 0 || bm === 0) return Math.PI;
+  let cosθ = (a.x * b.x + a.y * b.y + a.z * b.z) / (am * bm);
+  if (cosθ > 1) cosθ = 1;
+  if (cosθ < -1) cosθ = -1;
+  return Math.acos(cosθ);
+}
+
+// Compute the geocentric angular separation between two planets at a given JD.
+// Used both for the coarse scan and bisection refinement.
+function _planetSepAtJD(jd, keyA, keyB) {
+  const yearApprox = (jd - J2000_JD) / 365.25 + 2000;
+  const dT = deltaT(yearApprox);
+  const T = (jd + dT / 86400 - J2000_JD) / 36525;
+  const a = computePlanetPos(keyA, T);
+  const b = computePlanetPos(keyB, T);
+  const earth = (keyA === 'earth') ? a : (keyB === 'earth') ? b : computePlanetPos('earth', T);
+  const va = _geoVec(a, earth);
+  const vb = _geoVec(b, earth);
+  return _angSep(va, vb);
+}
+
+// Find local minima of pairwise geocentric angular separation over [startJD, endJD].
+// Optimization: for each time step, compute planet positions ONCE, then check all
+// 21 pairs. Detect local minima with a 3-sample window; refine via parabolic fit.
+function findConjunctions(startJD, endJD, threshDeg) {
+  const KEYS = ['mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune'];
+  const PAIRS = [];
+  for (let i = 0; i < KEYS.length; i++) {
+    for (let j = i + 1; j < KEYS.length; j++) {
+      PAIRS.push([KEYS[i], KEYS[j]]);
+    }
+  }
+
+  const STEP = 1.0;  // days
+  const threshRad = threshDeg * D2R;
+
+  // History buffer: prev2[pair_idx], prev1[pair_idx], lastJD2, lastJD1
+  const prev2 = new Array(PAIRS.length).fill(null);
+  const prev1 = new Array(PAIRS.length).fill(null);
+  let lastJD2 = 0, lastJD1 = 0;
+
+  const found = [];
+
+  for (let jd = startJD; jd <= endJD; jd += STEP) {
+    const yearApprox = (jd - J2000_JD) / 365.25 + 2000;
+    const dT = deltaT(yearApprox);
+    const T = (jd + dT / 86400 - J2000_JD) / 36525;
+    const earth = computePlanetPos('earth', T);
+    const positions = {};
+    for (const k of KEYS) positions[k] = computePlanetPos(k, T);
+
+    for (let p = 0; p < PAIRS.length; p++) {
+      const [keyA, keyB] = PAIRS[p];
+      const a = positions[keyA], b = positions[keyB];
+      const va = { x: a.x - earth.x, y: a.y - earth.y, z: a.z - earth.z };
+      const vb = { x: b.x - earth.x, y: b.y - earth.y, z: b.z - earth.z };
+      const sep = _angSep(va, vb);
+
+      // Detect local minimum: prev1 < prev2 AND prev1 < sep AND below threshold
+      if (prev2[p] !== null && prev1[p] !== null &&
+          prev1[p] < prev2[p] && prev1[p] < sep && prev1[p] < threshRad) {
+        const x0 = lastJD2, x1 = lastJD1, x2 = jd;
+        const y0 = prev2[p], y1 = prev1[p], y2 = sep;
+        const denom = (x0 - x1) * (x0 - x2) * (x1 - x2);
+        let tMin = x1;
+        let yMin = y1;
+        if (Math.abs(denom) > 1e-9) {
+          const A = (x2 * (y1 - y0) + x1 * (y0 - y2) + x0 * (y2 - y1)) / denom;
+          const B = (x2 * x2 * (y0 - y1) + x1 * x1 * (y2 - y0) + x0 * x0 * (y1 - y2)) / denom;
+          if (A > 0) {
+            tMin = -B / (2 * A);
+            yMin = _planetSepAtJD(tMin, keyA, keyB);
+          }
+        }
+        found.push({ pair: [keyA, keyB], jd: tMin, sepRad: yMin, sepDeg: yMin * R2D });
+      }
+
+      prev2[p] = prev1[p];
+      prev1[p] = sep;
+    }
+
+    lastJD2 = lastJD1;
+    lastJD1 = jd;
+  }
+
+  found.sort((a, b) => a.jd - b.jd);
+  return found;
+}
+
+// Find next inner-planet (Mercury or Venus) transit of the Sun.
+// Conditions: (1) inferior conjunction (planet between Sun & Earth → r_planet < r_earth
+// in heliocentric distance, AND geocentric ecliptic longitude ≈ Sun's), and
+// (2) geocentric ecliptic latitude < 0.27° (Sun's apparent radius).
+function findNextTransit(currentJD, planetKey, maxYears) {
+  const endJD = currentJD + maxYears * 365.25;
+  const STEP = 0.5;  // 12-hour steps
+  const SUN_RAD_DEG = 0.265;  // mean photospheric radius as seen from 1 AU
+
+  let prevDLon = null;
+  for (let jd = currentJD; jd <= endJD; jd += STEP) {
+    const yearApprox = (jd - J2000_JD) / 365.25 + 2000;
+    const dT = deltaT(yearApprox);
+    const T = (jd + dT / 86400 - J2000_JD) / 36525;
+    const planet = computePlanetPos(planetKey, T);
+    const earth = computePlanetPos('earth', T);
+
+    // Inferior conjunction = planet between Earth and Sun. Test:
+    //   heliocentric longitude of planet ≈ heliocentric longitude of Earth.
+    // Superior conjunction has them differing by 180°.
+    let lonDiff = planet.lon - earth.lon;
+    while (lonDiff > 180) lonDiff -= 360;
+    while (lonDiff < -180) lonDiff += 360;
+    if (Math.abs(lonDiff) > 30) {
+      prevDLon = null;
+      continue;
+    }
+
+    // Geocentric ecliptic position of the planet
+    const gx = planet.x - earth.x, gy = planet.y - earth.y, gz = planet.z - earth.z;
+    const gLon = Math.atan2(gy, gx) * R2D;
+    // Sun's geocentric ecliptic longitude = earth's helio + 180
+    const sunLon = wrapDeg(earth.lon + 180);
+    let dLon = gLon - sunLon;
+    while (dLon > 180) dLon -= 360;
+    while (dLon < -180) dLon += 360;
+
+    // Looking for sign change in dLon (zero crossing — exact alignment in lon)
+    if (prevDLon !== null && Math.sign(dLon) !== Math.sign(prevDLon) &&
+        Math.abs(dLon) < 5 && Math.abs(prevDLon) < 5) {
+      const frac = prevDLon / (prevDLon - dLon);
+      const tCross = jd - STEP + frac * STEP;
+      // Re-evaluate latitude at the crossing
+      const yearC = (tCross - J2000_JD) / 365.25 + 2000;
+      const dTc = deltaT(yearC);
+      const Tc = (tCross + dTc / 86400 - J2000_JD) / 36525;
+      const pc = computePlanetPos(planetKey, Tc);
+      const ec = computePlanetPos('earth', Tc);
+      const cx = pc.x - ec.x, cy = pc.y - ec.y, cz = pc.z - ec.z;
+      const cLat = Math.atan2(cz, Math.sqrt(cx * cx + cy * cy)) * R2D;
+      if (Math.abs(cLat) < SUN_RAD_DEG) {
+        return { jd: tCross, planet: planetKey, ecliptic_lat_deg: cLat };
+      }
+    }
+    prevDLon = dLon;
+  }
+  return null;
+}
+
 // Convert a Julian Date back to a calendar date (for displaying eclipse times)
 function jdToCalendar(jd) {
   jd += 0.5;
@@ -2127,7 +3477,23 @@ function jdToCalendar(jd) {
   const totalSeconds = dayFrac * 86400;
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
-  return { year, month, day: dayInt, hour: h, minute: m };
+  const s = totalSeconds - h * 3600 - m * 60;
+  return { year, month, day: dayInt, hour: h, minute: m, second: s };
+}
+
+// Inverse of jdToCalendar — Gregorian/Julian calendar to JD (Meeus eq. 7.1).
+// Y/M/D as integers, hour as a real (decimal hours UT). Treats input as UT.
+function jdFromCalendar(year, month, day, hour = 0, minute = 0, second = 0) {
+  let Y = year, M = month;
+  if (M <= 2) { Y -= 1; M += 12; }
+  const isGregorian = (year > 1582) ||
+    (year === 1582 && (month > 10 || (month === 10 && day >= 15)));
+  const A = Math.floor(Y / 100);
+  const B = isGregorian ? 2 - A + Math.floor(A / 4) : 0;
+  const dayFrac = day + (hour + minute / 60 + second / 3600) / 24;
+  return Math.floor(365.25 * (Y + 4716)) +
+         Math.floor(30.6001 * (M + 1)) +
+         dayFrac + B - 1524.5;
 }
 
 // ============================================================
@@ -2283,6 +3649,117 @@ function buildOrrery() {
     filter: 'drop-shadow(0 0 2px #dddddd)'
   });
   svg.appendChild(orreryMoonDot);
+
+  // ---- COMETS ----
+  // Each comet gets: a faint dashed orbit polyline (sampled), a tail line
+  // (drawn ahead of the dot, away from the Sun, scaled by 1/r), and a
+  // diamond-shaped marker so it visually reads differently from planets.
+  if (typeof COMETS !== 'undefined' && COMETS.length > 0) {
+    for (let i = 0; i < COMETS.length; i++) {
+      const comet = COMETS[i];
+      // Orbit polyline (filled in once at boot via computeCometOrbits)
+      const orbit = svgEl('polyline', {
+        class: 'comet-orbit',
+        points: '',
+        stroke: comet.color,
+        'data-comet-orbit': i
+      });
+      svg.appendChild(orbit);
+      orreryCometOrbits.push(orbit);
+
+      // Tail line (Sun-anti-direction)
+      const tail = svgEl('line', {
+        class: 'comet-tail',
+        x1: ORRERY_CENTER, y1: ORRERY_CENTER, x2: ORRERY_CENTER, y2: ORRERY_CENTER,
+        stroke: comet.color,
+        opacity: 0
+      });
+      svg.appendChild(tail);
+      orreryCometTails.push(tail);
+
+      // Comet body — a diamond/rotated square so it's visually distinct
+      const body = svgEl('polygon', {
+        class: 'comet-dot',
+        points: '0,-3 3,0 0,3 -3,0',
+        transform: `translate(${ORRERY_CENTER},${ORRERY_CENTER})`,
+        fill: comet.color,
+        filter: `drop-shadow(0 0 2.5px ${comet.color})`
+      });
+      const title = svgEl('title', {});
+      title.textContent = comet.name;
+      body.appendChild(title);
+      svg.appendChild(body);
+      orreryCometBodies.push(body);
+    }
+  }
+}
+
+// ---- COMET ORBIT TRAIL precomputation ----
+// For each comet, sample its orbit at uniform true-anomaly steps (so it
+// looks smooth in 2D) over enough range to depict a full orbit (or, for
+// hyperbolic, the inbound/outbound legs near perihelion).
+let orreryCometOrbits = [];
+let orreryCometTails = [];
+let orreryCometBodies = [];
+let _cometOrbitsBuilt = false;
+
+function buildCometOrbitTrails() {
+  if (_cometOrbitsBuilt) return;
+  if (typeof COMETS === 'undefined') return;
+
+  for (let ci = 0; ci < COMETS.length; ci++) {
+    const c = COMETS[ci];
+    const points = [];
+    const N = 200;
+
+    if (c.e < 0.999) {
+      // Elliptical: full orbit at uniform eccentric anomaly steps
+      const a = c.q / (1 - c.e);
+      const cw = Math.cos(c.w * D2R), sw = Math.sin(c.w * D2R);
+      const cO = Math.cos(c.Om * D2R), sO = Math.sin(c.Om * D2R);
+      const cI = Math.cos(c.I * D2R), sI = Math.sin(c.I * D2R);
+      for (let k = 0; k <= N; k++) {
+        const E = (k / N) * 2 * Math.PI;
+        const xp = a * (Math.cos(E) - c.e);
+        const yp = a * Math.sqrt(1 - c.e * c.e) * Math.sin(E);
+        const x = (cw * cO - sw * sO * cI) * xp + (-sw * cO - cw * sO * cI) * yp;
+        const y = (cw * sO + sw * cO * cI) * xp + (-sw * sO + cw * cO * cI) * yp;
+        const r2 = Math.sqrt(x * x + y * y);
+        const lon = Math.atan2(y, x);
+        const px = ORRERY_CENTER + auToPixels(r2) * Math.cos(lon);
+        const py = ORRERY_CENTER + auToPixels(r2) * Math.sin(lon);
+        // Skip orbits that go off-screen (Halley's aphelion is 35 AU — beyond Pluto)
+        points.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+      }
+    } else if (c.e > 1.001) {
+      // Hyperbolic: sample around perihelion
+      const a = c.q / (c.e - 1);
+      const cw = Math.cos(c.w * D2R), sw = Math.sin(c.w * D2R);
+      const cO = Math.cos(c.Om * D2R), sO = Math.sin(c.Om * D2R);
+      const cI = Math.cos(c.I * D2R), sI = Math.sin(c.I * D2R);
+      // Asymptote angle: cos(ν_∞) = -1/e
+      const nuMax = Math.acos(-1 / c.e) * 0.95;
+      for (let k = 0; k <= N; k++) {
+        const nu = -nuMax + (2 * nuMax) * (k / N);
+        const r2 = a * (c.e * c.e - 1) / (1 + c.e * Math.cos(nu));
+        const xp = r2 * Math.cos(nu);
+        const yp = r2 * Math.sin(nu);
+        const x = (cw * cO - sw * sO * cI) * xp + (-sw * cO - cw * sO * cI) * yp;
+        const y = (cw * sO + sw * cO * cI) * xp + (-sw * sO + cw * cO * cI) * yp;
+        const lon = Math.atan2(y, x);
+        const r3 = Math.sqrt(x * x + y * y);
+        const px = ORRERY_CENTER + auToPixels(r3) * Math.cos(lon);
+        const py = ORRERY_CENTER + auToPixels(r3) * Math.sin(lon);
+        points.push(`${px.toFixed(1)},${py.toFixed(1)}`);
+      }
+    }
+    // For e ≈ 1 we skip drawing the orbit (would be degenerate at this scale)
+
+    if (orreryCometOrbits[ci]) {
+      orreryCometOrbits[ci].setAttribute('points', points.join(' '));
+    }
+  }
+  _cometOrbitsBuilt = true;
 }
 
 // Estimate label bounding-box width in SVG units. At our 10px font with
@@ -2490,6 +3967,39 @@ function updateOrrery(astroState) {
     const conf = astroState.confidence;
     orreryConfidenceRing.setAttribute('opacity', 0.05 + (1 - conf.reliability) * 0.4);
   }
+
+  // ---- COMETS ----
+  // Place each comet body and update its tail vector. Tail points directly
+  // away from the Sun (heliocentric anti-radial), length ramps up as r → q
+  // following a 1/r law, capped at 25 px so it doesn't overwhelm the orrery.
+  if (typeof COMETS !== 'undefined' && astroState.comets && orreryCometBodies.length === COMETS.length) {
+    for (let i = 0; i < COMETS.length; i++) {
+      const c = COMETS[i];
+      const pos = astroState.comets[i];
+      if (!pos) continue;
+      const rPx = auToPixels(pos.r);
+      const lon = pos.lon * D2R;
+      const cx = ORRERY_CENTER + rPx * Math.cos(lon);
+      const cy = ORRERY_CENTER + rPx * Math.sin(lon);
+      orreryCometBodies[i].setAttribute('transform', `translate(${cx.toFixed(1)},${cy.toFixed(1)})`);
+
+      // Tail: direction from Sun to comet, then extend that for tail length.
+      // Tail visible only inside ~3.5 AU (no outgassing in deep space).
+      const tail = orreryCometTails[i];
+      if (pos.r < 3.5) {
+        const tailLen = Math.min(25, 4 / Math.max(pos.r, 0.3));
+        const tx = cx + tailLen * Math.cos(lon);
+        const ty = cy + tailLen * Math.sin(lon);
+        tail.setAttribute('x1', cx.toFixed(1));
+        tail.setAttribute('y1', cy.toFixed(1));
+        tail.setAttribute('x2', tx.toFixed(1));
+        tail.setAttribute('y2', ty.toFixed(1));
+        tail.setAttribute('opacity', Math.min(0.8, 1 / pos.r));
+      } else {
+        tail.setAttribute('opacity', 0);
+      }
+    }
+  }
 }
 
 // ============================================================
@@ -2592,6 +4102,222 @@ function updateMoonPhase(phaseInfo) {
 }
 
 // ============================================================
+// BARYCENTER PANEL — Sun's wobble around the SSB
+// SVG viewBox is -30..30 in solar-radius units. Sun disk radius=1.
+// We scale barycenter (x, y) from AU → solar radii, then plot.
+// A precomputed trail shows the last ~30 years of SSB motion so you
+// can see the multi-lobed Jupiter+Saturn pattern without waiting.
+// ============================================================
+let _baryTrailComputed = false;
+let _baryTrailPath = null;
+let _baryDot = null;
+let _barySunDisk = null;
+
+function buildBarycenterPanel() {
+  const svg = document.getElementById('barycenter-svg');
+  if (!svg) return;
+  svg.innerHTML = '';
+
+  // Reference axes (faint cross at origin)
+  const xAxis = svgEl('line', { class: 'bary-axis', x1: -28, y1: 0, x2: 28, y2: 0 });
+  const yAxis = svgEl('line', { class: 'bary-axis', x1: 0, y1: -28, x2: 0, y2: 28 });
+  svg.appendChild(xAxis);
+  svg.appendChild(yAxis);
+
+  // Sun disk (1 solar radius). We exaggerate the Sun visually by 3x so the wobble
+  // of ~1-2 R_sun is visible inside a 60-unit viewport. Real ratio is preserved
+  // in the readout text.
+  _barySunDisk = svgEl('circle', { class: 'sun-disk', cx: 0, cy: 0, r: 3 });
+  svg.appendChild(_barySunDisk);
+
+  // Trail polyline (filled in once trail is computed at boot)
+  _baryTrailPath = svgEl('polyline', { class: 'bary-trail', points: '' });
+  svg.appendChild(_baryTrailPath);
+
+  // Current barycenter dot
+  _baryDot = svgEl('circle', { class: 'bary-dot', cx: 0, cy: 0, r: 1.0 });
+  svg.appendChild(_baryDot);
+}
+
+// Generate the SSB trail covering [now - 30yr, now + 5yr] in 2-month steps.
+// Sun shown 3x exaggerated; barycenter offset shown 6x exaggerated relative to
+// solar radii so the multi-lobed pattern is visible. The numeric readout is
+// always the true value.
+const BARY_VIS_SCALE = 6;  // visual scale factor
+
+function computeBarycenterTrail(currentJD) {
+  if (_baryTrailComputed) return;
+  _baryTrailComputed = true;
+
+  const points = [];
+  // -30 yr to +5 yr, 2-month resolution = 35 yr * 6 samples/yr = 210 points
+  const stepDays = 60;
+  const startJD = currentJD - 365.25 * 30;
+  const endJD = currentJD + 365.25 * 5;
+  for (let jd = startJD; jd <= endJD; jd += stepDays) {
+    const yearApprox = (jd - J2000_JD) / 365.25 + 2000;
+    const dT = deltaT(yearApprox);
+    const T = (jd + dT / 86400 - J2000_JD) / 36525;
+    const planets = {};
+    for (const info of PLANET_INFO) {
+      planets[info.key] = computePlanetPos(info.key, T);
+    }
+    const b = computeBarycenter(planets);
+    // Scale to viewBox: r in solar radii * BARY_VIS_SCALE
+    const px = b.x / SOLAR_RADIUS_AU * BARY_VIS_SCALE;
+    const py = b.y / SOLAR_RADIUS_AU * BARY_VIS_SCALE;
+    points.push(`${px.toFixed(2)},${py.toFixed(2)}`);
+  }
+  if (_baryTrailPath) _baryTrailPath.setAttribute('points', points.join(' '));
+}
+
+function updateBarycenterPanel(astroState) {
+  const b = astroState.barycenter;
+  if (!b || !_baryDot) return;
+
+  // Current dot position (visual scale)
+  const px = b.x / SOLAR_RADIUS_AU * BARY_VIS_SCALE;
+  const py = b.y / SOLAR_RADIUS_AU * BARY_VIS_SCALE;
+  _baryDot.setAttribute('cx', px.toFixed(2));
+  _baryDot.setAttribute('cy', py.toFixed(2));
+
+  const statusEl = document.getElementById('bary-status');
+  const distEl   = document.getElementById('bary-distance');
+  if (statusEl) {
+    statusEl.textContent = b.insideSun
+      ? `INSIDE the Sun  (${b.rSolar.toFixed(3)} R⊙)`
+      : `OUTSIDE the Sun by ${(b.rSolar - 1).toFixed(3)} R⊙`;
+  }
+  if (distEl) {
+    const km = b.r * 149597870.7;
+    distEl.textContent = `offset: ${b.rSolar.toFixed(3)} R⊙ · ${(km / 1000).toFixed(0)} thousand km`;
+  }
+}
+
+// ============================================================
+// COMETS PANEL RENDERER
+// Lists all comets with current heliocentric distance, sorted by activity:
+// "active" = inside 3.5 AU (where outgassing produces visible tail).
+// Ordering: active first (closest first), then dormant (closest first).
+// ============================================================
+function buildCometsList() {
+  const el = document.getElementById('comets-list');
+  if (!el || typeof COMETS === 'undefined') return;
+  // Initial render with placeholders — actual values fill in on first astro tick
+  let html = '';
+  for (let i = 0; i < COMETS.length; i++) {
+    const c = COMETS[i];
+    html += `
+      <div class="comet-row" data-comet-idx="${i}">
+        <span class="comet-name"><span class="comet-swatch" style="background:${c.color}"></span>${c.short}</span>
+        <span class="comet-dist">— AU</span>
+        <span class="comet-perih">—</span>
+      </div>`;
+  }
+  el.innerHTML = html;
+}
+
+function updateCometsList(astroState, currentJD) {
+  const el = document.getElementById('comets-list');
+  if (!el || typeof COMETS === 'undefined' || !astroState.comets) return;
+
+  // Sort indices by activity then distance
+  const indexed = COMETS.map((c, i) => ({
+    i, c,
+    pos: astroState.comets[i],
+    r: astroState.comets[i] ? astroState.comets[i].r : Infinity
+  }));
+  indexed.sort((a, b) => {
+    const aActive = a.r < 3.5 ? 0 : 1;
+    const bActive = b.r < 3.5 ? 0 : 1;
+    if (aActive !== bActive) return aActive - bActive;
+    return a.r - b.r;
+  });
+
+  let html = '';
+  for (const item of indexed) {
+    const c = item.c;
+    const isActive = item.r < 3.5;
+    const distStr = item.pos ? `${item.r.toFixed(2)} AU` : '—';
+    const perihJD = nextPerihelionJD(c, currentJD);
+    let perihStr = '—';
+    if (perihJD) {
+      const days = perihJD - currentJD;
+      const cal = jdToCalendar(perihJD);
+      if (days < 0) {
+        perihStr = `was ${_formatJDDateShort(perihJD)}`;
+      } else if (days < 365.25) {
+        perihStr = `next perih: ${_formatJDDateShort(perihJD)}`;
+      } else {
+        perihStr = `perih ${cal.year}`;
+      }
+    }
+    const activeClass = isActive ? ' active' : '';
+    html += `
+      <div class="comet-row">
+        <span class="comet-name${activeClass}"><span class="comet-swatch" style="background:${c.color}"></span>${c.short}</span>
+        <span class="comet-dist${activeClass}">${distStr}</span>
+        <span class="comet-perih">${perihStr}</span>
+      </div>`;
+  }
+  el.innerHTML = html;
+}
+
+// ============================================================
+// CONJUNCTIONS PANEL RENDERER
+// Shows up to 5 upcoming planetary conjunctions and the next inner-planet
+// transits of the Sun. Color-codes "imminent" (within 30 days) and "very
+// close" (separation < 1°, the rarest and most spectacular).
+// ============================================================
+const _PLANET_LABEL = {
+  mercury: 'Mer', venus: 'Ven', mars: 'Mar', jupiter: 'Jup',
+  saturn: 'Sat', uranus: 'Ura', neptune: 'Nep'
+};
+
+function _formatJDDateShort(jd) {
+  const cal = jdToCalendar(jd);
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${cal.year} ${monthNames[cal.month - 1]} ${String(cal.day).padStart(2, '0')}`;
+}
+
+function updateConjunctionsPanel(astroState, currentJD) {
+  const el = document.getElementById('conjunction-list');
+  if (!el) return;
+
+  const conjunctions = astroState.conjunctions || [];
+  const upcoming = conjunctions.filter(c => c.jd >= currentJD - 0.5).slice(0, 5);
+
+  let html = '';
+  if (upcoming.length === 0) {
+    html = '<div style="color:#444;font-size:0.6rem">no close conjunctions in next 2.5 years</div>';
+  } else {
+    for (const c of upcoming) {
+      const pair = `${_PLANET_LABEL[c.pair[0]]}–${_PLANET_LABEL[c.pair[1]]}`;
+      const days = c.jd - currentJD;
+      const sepStyle = c.sepDeg < 1 ? 'color:#ffcc44;font-weight:bold' : '';
+      const whenClass = days < 30 ? 'color:#ff8844' : '';
+      html += `
+        <div class="conjunction-row">
+          <span class="conj-pair">${pair}</span>
+          <span class="conj-sep" style="${sepStyle}">${c.sepDeg.toFixed(2)}°</span>
+          <span class="conj-when" style="${whenClass}">${_formatJDDateShort(c.jd)}</span>
+        </div>`;
+    }
+  }
+
+  // Transit section
+  html += '<div class="conj-section-title">next solar transits</div>';
+  if (astroState.nextMercuryTransit) {
+    html += `<div class="conj-transit">☿ Mercury: ${_formatJDDateShort(astroState.nextMercuryTransit.jd)}</div>`;
+  }
+  if (astroState.nextVenusTransit) {
+    html += `<div class="conj-transit">♀ Venus: ${_formatJDDateShort(astroState.nextVenusTransit.jd)}</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+// ============================================================
 // ECLIPSE PANEL RENDERER
 // ============================================================
 function updateEclipsePanel(astroState, currentJD) {
@@ -2682,6 +4408,7 @@ let worldMoonHorizonPath = null;
 let worldSublunarGlow = null;
 let worldSublunarDot = null;
 let worldEclipseGroup = null;
+let worldMagneticGroup = null;
 
 function buildWorldMap() {
   const svg = document.getElementById('world-map');
@@ -2744,9 +4471,129 @@ function buildWorldMap() {
   });
   svg.appendChild(worldSublunarDot);
 
-  // 8) Eclipse group (markers + labels rendered into this)
+  // 8) Magnetic declination isogonic contour overlay (drawn between
+  // graticule and continents in z-order so labels stay readable).
+  // We compute it once at boot using the current year — it changes by
+  // ~0.1° per year so it doesn't need re-rendering.
+  worldMagneticGroup = svgEl('g', { class: 'magnetic-overlay' });
+  svg.appendChild(worldMagneticGroup);
+
+  // 9) Eclipse group (markers + labels rendered into this)
   worldEclipseGroup = svgEl('g', {});
   svg.appendChild(worldEclipseGroup);
+}
+
+// ============================================================
+// MAGNETIC DECLINATION ISOGONIC CONTOURS via marching squares
+// Computes IGRF declination on a coarse grid, then traces contour
+// lines for D = -60, -45, -30, -15, 0, +15, +30, +45, +60 degrees.
+// The agonic line (D=0) is drawn red since it's the most striking.
+// ============================================================
+let _isogonicComputed = false;
+
+function buildIsogonicContours(currentYear) {
+  if (_isogonicComputed || !worldMagneticGroup || typeof IGRF_G === 'undefined') return;
+  _isogonicComputed = true;
+
+  // Sample on a 5°×5° grid (37×73 cells)
+  const NLAT = 36, NLON = 72;
+  const grid = [];
+  for (let i = 0; i <= NLAT; i++) {
+    const lat = 90 - (i * 180 / NLAT);
+    const row = [];
+    for (let j = 0; j <= NLON; j++) {
+      const lon = -180 + (j * 360 / NLON);
+      // Avoid singularity at exact poles
+      const safeLat = Math.max(-89.5, Math.min(89.5, lat));
+      const f = igrfFieldAt(safeLat, lon, 0, currentYear);
+      row.push(f ? f.D : 0);
+    }
+    grid.push(row);
+  }
+
+  // Marching squares for each contour level
+  const LEVELS = [-60, -45, -30, -15, 0, 15, 30, 45, 60];
+  for (const level of LEVELS) {
+    const isAgonic = (level === 0);
+    const segments = [];
+
+    for (let i = 0; i < NLAT; i++) {
+      for (let j = 0; j < NLON; j++) {
+        // Cell corners: TL=grid[i][j], TR=grid[i][j+1], BR=grid[i+1][j+1], BL=grid[i+1][j]
+        const v00 = grid[i][j];
+        const v01 = grid[i][j + 1];
+        const v10 = grid[i + 1][j];
+        const v11 = grid[i + 1][j + 1];
+
+        // Skip cells that wrap around in declination (jumping from +180 to -180
+        // happens near magnetic poles and creates spurious diagonal lines)
+        const cellMax = Math.max(v00, v01, v10, v11);
+        const cellMin = Math.min(v00, v01, v10, v11);
+        if (cellMax - cellMin > 180) continue;
+
+        // Build classification: 4-bit code
+        const code = (v00 > level ? 8 : 0) | (v01 > level ? 4 : 0) |
+                     (v11 > level ? 2 : 0) | (v10 > level ? 1 : 0);
+        if (code === 0 || code === 15) continue;
+
+        // Cell coordinate range
+        const lat0 = 90 - (i * 180 / NLAT);
+        const lat1 = 90 - ((i + 1) * 180 / NLAT);
+        const lon0 = -180 + (j * 360 / NLON);
+        const lon1 = -180 + ((j + 1) * 360 / NLON);
+
+        // Edge interpolation helpers
+        const top = () => {
+          const t = (level - v00) / (v01 - v00);
+          return [lon0 + t * (lon1 - lon0), lat0];
+        };
+        const bot = () => {
+          const t = (level - v10) / (v11 - v10);
+          return [lon0 + t * (lon1 - lon0), lat1];
+        };
+        const left = () => {
+          const t = (level - v00) / (v10 - v00);
+          return [lon0, lat0 + t * (lat1 - lat0)];
+        };
+        const right = () => {
+          const t = (level - v01) / (v11 - v01);
+          return [lon1, lat0 + t * (lat1 - lat0)];
+        };
+
+        let p1 = null, p2 = null;
+        switch (code) {
+          case 1:  case 14: p1 = left();  p2 = bot();   break;
+          case 2:  case 13: p1 = bot();   p2 = right(); break;
+          case 3:  case 12: p1 = left();  p2 = right(); break;
+          case 4:  case 11: p1 = top();   p2 = right(); break;
+          case 6:  case 9:  p1 = top();   p2 = bot();   break;
+          case 7:  case 8:  p1 = left();  p2 = top();   break;
+          case 5:  // saddle: pick one resolution
+            p1 = left();  p2 = top();
+            segments.push([bot(), right()]);
+            break;
+          case 10:
+            p1 = left();  p2 = bot();
+            segments.push([top(), right()]);
+            break;
+        }
+        if (p1 && p2) segments.push([p1, p2]);
+      }
+    }
+
+    // Render segments as SVG lines
+    for (const [p1, p2] of segments) {
+      const x1 = lonToX(p1[0]), y1 = latToY(p1[1]);
+      const x2 = lonToX(p2[0]), y2 = latToY(p2[1]);
+      const cls = isAgonic ? 'magnetic-agonic' : (level > 0 ? 'magnetic-east' : 'magnetic-west');
+      const seg = svgEl('line', {
+        class: cls,
+        x1: x1.toFixed(1), y1: y1.toFixed(1),
+        x2: x2.toFixed(1), y2: y2.toFixed(1)
+      });
+      worldMagneticGroup.appendChild(seg);
+    }
+  }
 }
 
 // Compute the day-side polygon as a list of (x,y) points.
@@ -3111,20 +4958,39 @@ function astroUpdate(jd) {
   const sun = sunPosition(T, planets.earth);
   const phase = moonPhase(moon, sun);
   const confidence = astroConfidence(T);
+  const barycenter = computeBarycenter(planets);
+
+  // Comet positions — cheap (12 Kepler solves) so compute every astro tick
+  let comets = [];
+  if (typeof COMETS !== 'undefined') {
+    for (let i = 0; i < COMETS.length; i++) {
+      try {
+        comets.push(computeCometPos(COMETS[i], jdTT));
+      } catch (e) {
+        comets.push(null);
+      }
+    }
+  }
 
   // Eclipses — only recompute every ~30 minutes since they change slowly
   if (!astroState || Math.abs(jd - (astroState._eclipseJD || 0)) > 1 / 48) {
     const nextSolarEclipse = findNextEclipse(jd, false);
     const nextLunarEclipse = findNextEclipse(jd, true);
+    // Conjunctions & transits — also slow-changing, recompute on the same cadence.
+    // Scan the next 2.5 years for conjunctions <5°; first transit of each inner planet.
+    const conjunctions = findConjunctions(jd, jd + 2.5 * 365.25, 5.0);
+    const nextMercuryTransit = findNextTransit(jd, 'mercury', 25);
+    const nextVenusTransit   = findNextTransit(jd, 'venus', 130);
     astroState = {
-      jd, T, dT, planets, moon, sun, phase, confidence,
+      jd, T, dT, planets, moon, sun, phase, confidence, barycenter, comets,
       nextSolarEclipse, nextLunarEclipse,
+      conjunctions, nextMercuryTransit, nextVenusTransit,
       _eclipseJD: jd
     };
   } else {
     astroState = {
       ...astroState,
-      jd, T, dT, planets, moon, sun, phase, confidence
+      jd, T, dT, planets, moon, sun, phase, confidence, barycenter, comets
     };
   }
 
@@ -3133,6 +4999,13 @@ function astroUpdate(jd) {
   updateEclipsePanel(astroState, jd);
   updateConfidence(confidence);
   updateWorldMapSlow(astroState, jd);
+  computeBarycenterTrail(jd);  // no-op after first call
+  updateBarycenterPanel(astroState);
+  updateConjunctionsPanel(astroState, jd);
+  updateCometsList(astroState, jd);
+  // Sky chart redraws once per second (stars only move ~0.004°/sec via GMST,
+  // imperceptible at higher rates). Skip if not yet built.
+  if (typeof STARS !== 'undefined') drawSkyChart();
 
   // Debug hook for headless test harness
   window.__lastAstroState = astroState;
@@ -3249,6 +5122,1076 @@ function fmtHoursToHHMM(h) {
   return `${String(hh).padStart(2,'0')}:${String(mm).padStart(2,'0')}`;
 }
 
+// ============================================================
+// CELESTIAL NAVIGATION — sextant-style position fixing
+//
+// Foundation: every observation of a celestial body's altitude defines
+// a "circle of position" (CoP) on Earth. The center of the circle is
+// the body's geographic position (GP) — the point directly below the
+// body where it sits at the zenith. The angular radius (in degrees of
+// arc on Earth's surface) is (90° − Ho), where Ho is the observer's
+// corrected altitude.
+//
+// Two CoPs intersect at exactly two points (analytically solvable).
+// One of them is the observer's position; the ambiguity is broken by a
+// rough DR (dead reckoning) position or a third observation.
+//
+// Three CoPs in noisy real-world data form a "cocked hat" — a small
+// triangle whose centroid is the most-probable fix.
+//
+// Pre-GPS this was the basis of all open-ocean navigation. Cook,
+// Slocum, Lindbergh, and Apollo all used variants of this method.
+// ============================================================
+
+// Bright navigation stars — the standard Pub. 249 / Nautical Almanac
+// list. RA/Dec are J2000.0 (we'll precess to date in bodyGP).
+// Sources: Hipparcos catalog + Astronomical Almanac.
+const NAV_STARS = [
+  // name           HIP      RA_J2000_deg  Dec_J2000_deg  vmag
+  { name: 'Polaris',     hip: 11767, raDeg:  37.95456, decDeg:  89.26411, mag: 1.97 },
+  { name: 'Sirius',      hip: 32349, raDeg: 101.28716, decDeg: -16.71612, mag: -1.46 },
+  { name: 'Canopus',     hip: 30438, raDeg:  95.98787, decDeg: -52.69566, mag: -0.74 },
+  { name: 'Arcturus',    hip: 69673, raDeg: 213.91530, decDeg:  19.18241, mag: -0.05 },
+  { name: 'Vega',        hip: 91262, raDeg: 279.23474, decDeg:  38.78369, mag:  0.03 },
+  { name: 'Capella',     hip: 24608, raDeg:  79.17232, decDeg:  45.99799, mag:  0.08 },
+  { name: 'Rigel',       hip: 24436, raDeg:  78.63446, decDeg:  -8.20164, mag:  0.13 },
+  { name: 'Procyon',     hip: 37279, raDeg: 114.82550, decDeg:   5.22498, mag:  0.34 },
+  { name: 'Betelgeuse',  hip: 27989, raDeg:  88.79294, decDeg:   7.40706, mag:  0.42 },
+  { name: 'Altair',      hip: 97649, raDeg: 297.69582, decDeg:   8.86832, mag:  0.77 },
+  { name: 'Aldebaran',   hip: 21421, raDeg:  68.98016, decDeg:  16.50930, mag:  0.85 },
+  { name: 'Antares',     hip: 80763, raDeg: 247.35192, decDeg: -26.43200, mag:  1.09 },
+  { name: 'Spica',       hip: 65474, raDeg: 201.29825, decDeg: -11.16132, mag:  0.97 },
+  { name: 'Pollux',      hip: 37826, raDeg: 116.32893, decDeg:  28.02620, mag:  1.14 },
+  { name: 'Fomalhaut',   hip: 113368, raDeg: 344.41269, decDeg: -29.62224, mag: 1.16 },
+  { name: 'Deneb',       hip: 102098, raDeg: 310.35797, decDeg:  45.28033, mag: 1.25 },
+  { name: 'Regulus',     hip: 49669, raDeg: 152.09296, decDeg:  11.96720, mag:  1.40 },
+  // Historical / future pole stars — included so the deep-time pole-star
+  // finder can name them. Thuban was pole during the Egyptian pyramid era
+  // (~−2700 BCE); Errai becomes pole around +4000 CE; Alderamin around
+  // +7500 CE; Vega around +13700 CE; Kochab around +1100 BCE.
+  { name: 'Thuban',      hip: 68756, raDeg: 211.09733, decDeg:  64.37585, mag:  3.65 },  // α Dra
+  { name: 'Kochab',      hip: 72607, raDeg: 222.67635, decDeg:  74.15549, mag:  2.08 },  // β UMi
+  { name: 'Alderamin',   hip: 105199, raDeg: 319.64487, decDeg:  62.58557, mag: 2.45 },  // α Cep
+  { name: 'Errai',       hip: 116727, raDeg: 354.83641, decDeg:  77.63223, mag: 3.21 }   // γ Cep
+];
+
+// Geographic position of a celestial body at jdUT — i.e., the point on
+// Earth's surface directly beneath the body. Returns { lat, lon } in
+// degrees, plus { ra, dec } for diagnostics. Body keys:
+//   'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn',
+//   'uranus', 'neptune', or any name from NAV_STARS (case-insensitive).
+function bodyGP(bodyKey, jdUT) {
+  const yearApprox = (jdUT - J2000_JD) / 365.25 + 2000;
+  const dT = deltaT(yearApprox);
+  const jdTT = jdUT + dT / 86400;
+  const T = (jdTT - J2000_JD) / 36525;
+  const gst = gmstDeg(jdUT);
+
+  let raDeg, decDeg;
+
+  const key = bodyKey.toLowerCase();
+  if (key === 'sun') {
+    const earth = computePlanetPos('earth', T);
+    const sun = sunPosition(T, earth);
+    const lonDate = precessJ2000LonToDate(sun.lon, T);
+    const eq = eclipticToEquatorial(lonDate, sun.lat, meanObliquity(T));
+    raDeg = eq.ra; decDeg = eq.dec;
+  } else if (key === 'moon') {
+    const m = moonPosition(T);
+    const lonDate = precessJ2000LonToDate(m.lon, T);
+    const eq = eclipticToEquatorial(lonDate, m.lat, meanObliquity(T));
+    raDeg = eq.ra; decDeg = eq.dec;
+  } else if (['mercury','venus','mars','jupiter','saturn','uranus','neptune'].includes(key)) {
+    const earth = computePlanetPos('earth', T);
+    const p = computePlanetPos(key, T);
+    const gx = p.x - earth.x, gy = p.y - earth.y, gz = p.z - earth.z;
+    const gLon = Math.atan2(gy, gx) * R2D;
+    const gLat = Math.atan2(gz, Math.sqrt(gx * gx + gy * gy)) * R2D;
+    const lonDate = precessJ2000LonToDate(gLon, T);
+    const eq = eclipticToEquatorial(lonDate, gLat, meanObliquity(T));
+    raDeg = eq.ra; decDeg = eq.dec;
+  } else {
+    // Star — look up in NAV_STARS, apply precession (proper motion is
+    // negligible at sextant accuracy of ~0.5')
+    const star = NAV_STARS.find(s => s.name.toLowerCase() === key);
+    if (!star) return null;
+    // Precess J2000 → date via the same matrix used in the sky chart
+    const M = _getPrecessionMatrix(jdTT);
+    const ra0 = star.raDeg * D2R, dec0 = star.decDeg * D2R;
+    const cd0 = Math.cos(dec0);
+    const x0 = cd0 * Math.cos(ra0), y0 = cd0 * Math.sin(ra0), z0 = Math.sin(dec0);
+    const x1 = M[0]*x0 + M[1]*y0 + M[2]*z0;
+    const y1 = M[3]*x0 + M[4]*y0 + M[5]*z0;
+    const z1 = M[6]*x0 + M[7]*y0 + M[8]*z0;
+    raDeg = wrapDeg(Math.atan2(y1, x1) * R2D);
+    decDeg = Math.asin(z1) * R2D;
+  }
+
+  // Geographic position of body: lat = declination, lon = RA − GMST
+  let lon = raDeg - gst;
+  while (lon > 180) lon -= 360;
+  while (lon < -180) lon += 360;
+  return { lat: decDeg, lon, ra: raDeg, dec: decDeg };
+}
+
+// Sextant correction stack. Hs is the sextant altitude (raw reading).
+// Returns Ho (corrected observed altitude — the altitude of the body's
+// geometric center as seen from Earth's center, suitable for the
+// intercept method).
+//
+// Corrections applied (in order):
+//   IC   — index correction (instrument calibration; positive on-arc)
+//   dip  — drop in apparent horizon below true horizontal due to
+//          observer's height of eye:  dip ≈ 0.0293 · √h_eye_meters  (deg)
+//   refr — atmospheric refraction at apparent altitude (Bennett 1982):
+//          R = 1/tan(ha + 7.31/(ha + 4.4))  arcmin
+//          (uses standard 10°C / 1010 hPa atmosphere)
+//   SD   — Sun/Moon semidiameter (only if observing limb, not center):
+//          add for lower limb, subtract for upper limb
+//   PA   — parallax in altitude (parallax correction, applied to the moon
+//          and inner planets):  PA = HP · cos(ha)
+//          where HP (horizontal parallax) is ~57' for moon, sub-arcsec for stars.
+function applySextantCorrections(Hs, body, opts = {}) {
+  const ic = opts.indexCorrection || 0;       // arcmin, positive on-arc
+  const heyeM = opts.heightOfEyeM || 0;       // meters
+  const limb = opts.limb || 'center';         // 'lower'|'upper'|'center'
+  const tempC = opts.tempC ?? 10;             // °C
+  const pressureMb = opts.pressureMb ?? 1010; // hPa
+
+  // 1) Apparent altitude after IC + dip
+  const ic_deg = ic / 60;
+  const dip_deg = 0.0293 * Math.sqrt(Math.max(0, heyeM));
+  let ha = Hs - ic_deg - dip_deg;
+
+  // 2) Refraction (Bennett 1982 with Sæmundsson temperature/pressure scaling)
+  // Below ha = -1°, body is below horizon — return null
+  if (ha < -1) return null;
+  const hax = ha + 7.31 / (ha + 4.4);
+  let R_arcmin = 1 / Math.tan(hax * D2R);
+  // Temperature & pressure correction (standard Sæmundsson)
+  R_arcmin *= (pressureMb / 1010) * (283 / (273 + tempC));
+  ha -= R_arcmin / 60;
+
+  // 3) Semidiameter (geocentric — varies slightly with distance)
+  let sd_deg = 0;
+  if (limb !== 'center') {
+    if (body === 'sun')  sd_deg = 0.2666;   // ~16.0'
+    if (body === 'moon') sd_deg = 0.2585;   // ~15.5'
+    ha += (limb === 'lower' ? sd_deg : -sd_deg);
+  }
+
+  // 4) Parallax in altitude (only the moon and Venus/Mars matter at
+  // sextant precision; sun's HP is 0.0024°, well below 0.5' resolution)
+  let HP_deg = 0;
+  if (body === 'moon') HP_deg = 0.951;       // ~57.04' mean horizontal parallax
+  // For inner planets at favorable positions: parallax up to 30" = 0.5' (treated as zero)
+  ha += HP_deg * Math.cos(ha * D2R);
+
+  return ha;
+}
+
+// Sample a circle of position as a polyline of (lat, lon) points.
+// gp = body geographic position { lat, lon }, c = angular radius in
+// degrees (= 90° - Ho). Returns an array of [lat, lon] pairs along the
+// circle, with the first/last point connected (closed loop).
+//
+// Standard endpoint formula on a sphere: starting from gp at azimuth A
+// (bearing from north), travel angular distance c. Sample A from 0 to
+// 360° in N steps.
+function circleOfPositionPoints(gp, c, N = 144) {
+  const phi1 = gp.lat * D2R;
+  const lam1 = gp.lon * D2R;
+  const cR = c * D2R;
+  const sinPhi1 = Math.sin(phi1), cosPhi1 = Math.cos(phi1);
+  const sinC = Math.sin(cR), cosC = Math.cos(cR);
+  const out = [];
+  for (let i = 0; i <= N; i++) {
+    const A = (i / N) * 2 * Math.PI;
+    const sinPhi2 = sinPhi1 * cosC + cosPhi1 * sinC * Math.cos(A);
+    const phi2 = Math.asin(sinPhi2);
+    const lam2 = lam1 + Math.atan2(
+      Math.sin(A) * sinC * cosPhi1,
+      cosC - sinPhi1 * sinPhi2
+    );
+    let lonDeg = lam2 * R2D;
+    while (lonDeg > 180) lonDeg -= 360;
+    while (lonDeg < -180) lonDeg += 360;
+    out.push([phi2 * R2D, lonDeg]);
+  }
+  return out;
+}
+
+// Two-circle intersection on a sphere — closed form via vector algebra.
+// Returns the two candidate observer positions { lat, lon } as an array
+// (ordered by which one is closer to a DR position if provided).
+//
+// Math: Each CoP is the locus of points p (unit vectors) satisfying
+//   p · g_i = cos(c_i)
+// where g_i is the GP unit vector and c_i is the angular radius. The
+// solution lies in the plane spanned by g_1, g_2 plus a multiple of
+// n = g_1 × g_2. Solve the 2×2 linear system for a, b in
+//   p = a·g_1 + b·g_2 + t·n
+// then |p|=1 gives ±t. (See Bowditch §2503, or any spherical-geometry
+// reference.)
+function intersectCoPs(gp1, c1, gp2, c2, drLat, drLon) {
+  const toCart = (lat, lon) => {
+    const phi = lat * D2R, lam = lon * D2R;
+    return [Math.cos(phi)*Math.cos(lam), Math.cos(phi)*Math.sin(lam), Math.sin(phi)];
+  };
+  const fromCart = (v) => {
+    const r = Math.hypot(v[0], v[1], v[2]);
+    return {
+      lat: Math.asin(v[2]/r) * R2D,
+      lon: Math.atan2(v[1], v[0]) * R2D
+    };
+  };
+  const g1 = toCart(gp1.lat, gp1.lon);
+  const g2 = toCart(gp2.lat, gp2.lon);
+  const cos_c1 = Math.cos(c1 * D2R);
+  const cos_c2 = Math.cos(c2 * D2R);
+  const d = g1[0]*g2[0] + g1[1]*g2[1] + g1[2]*g2[2];
+  const det = 1 - d * d;
+  if (Math.abs(det) < 1e-12) return null;  // GPs coincide → infinite or no solutions
+  const a = (cos_c1 - d * cos_c2) / det;
+  const b = (cos_c2 - d * cos_c1) / det;
+  // n = g1 × g2
+  const n = [
+    g1[1]*g2[2] - g1[2]*g2[1],
+    g1[2]*g2[0] - g1[0]*g2[2],
+    g1[0]*g2[1] - g1[1]*g2[0]
+  ];
+  const nMag2 = n[0]*n[0] + n[1]*n[1] + n[2]*n[2];
+  const t2 = (1 - a*cos_c1 - b*cos_c2) / nMag2;
+  if (t2 < 0) return null;  // circles don't intersect
+  const t = Math.sqrt(t2);
+  const p_plus = [a*g1[0]+b*g2[0]+t*n[0], a*g1[1]+b*g2[1]+t*n[1], a*g1[2]+b*g2[2]+t*n[2]];
+  const p_minus = [a*g1[0]+b*g2[0]-t*n[0], a*g1[1]+b*g2[1]-t*n[1], a*g1[2]+b*g2[2]-t*n[2]];
+  const r1 = fromCart(p_plus);
+  const r2 = fromCart(p_minus);
+  // Order by proximity to DR if provided
+  if (Number.isFinite(drLat) && Number.isFinite(drLon)) {
+    const dist = (p) => {
+      const dphi = (p.lat - drLat) * D2R;
+      const dlam = (p.lon - drLon) * D2R;
+      const a1 = Math.sin(dphi/2)**2 + Math.cos(p.lat*D2R)*Math.cos(drLat*D2R)*Math.sin(dlam/2)**2;
+      return 2 * Math.asin(Math.min(1, Math.sqrt(a1)));
+    };
+    return dist(r1) < dist(r2) ? [r1, r2] : [r2, r1];
+  }
+  return [r1, r2];
+}
+
+// Multi-observation fix via least-squares on the unit sphere. For 3+
+// CoPs (or 2 with DR), find the position that minimizes the sum of
+// (angular_distance_to_GP - c)² across all observations. Iterative
+// Newton step from a starting position.
+//
+// Returns { lat, lon, residualArcmin } where residual is the RMS error
+// in arcminutes — for noise-free data this is 0; for sextant data it
+// indicates the size of the "cocked hat".
+function celestialFix(observations, startLat, startLon, maxIter = 20) {
+  if (observations.length < 2) return null;
+  let phi = startLat * D2R, lam = startLon * D2R;
+  for (let iter = 0; iter < maxIter; iter++) {
+    // Build linearized system: J·dx = r, where r_i = c_i - dist_i
+    // Variables: dphi, dlam (in radians).
+    let A11 = 0, A12 = 0, A22 = 0, b1 = 0, b2 = 0;
+    for (const obs of observations) {
+      const phig = obs.gp.lat * D2R, lamg = obs.gp.lon * D2R;
+      const cosD = Math.sin(phi)*Math.sin(phig) + Math.cos(phi)*Math.cos(phig)*Math.cos(lam-lamg);
+      const D_ = Math.acos(Math.max(-1, Math.min(1, cosD)));
+      const sinD = Math.sin(D_);
+      if (sinD < 1e-9) continue;
+      // ∂D/∂phi  = (sin(phi)*cos(phig)*cos(lam-lamg) - cos(phi)*sin(phig)) / sinD
+      // wait, sign — let f = -cosD, D = acos(cosD), dD/dphi = -1/sinD * dcosD/dphi
+      const dcos_dphi = Math.cos(phi)*Math.sin(phig) - Math.sin(phi)*Math.cos(phig)*Math.cos(lam-lamg);
+      const dcos_dlam = -Math.cos(phi)*Math.cos(phig)*Math.sin(lam-lamg);
+      const dD_dphi = -dcos_dphi / sinD;
+      const dD_dlam = -dcos_dlam / sinD;
+      const r = obs.c * D2R - D_;     // residual in radians
+      // Weight by 1 (could weight by sin(altitude) for noise model)
+      A11 += dD_dphi * dD_dphi;
+      A12 += dD_dphi * dD_dlam;
+      A22 += dD_dlam * dD_dlam;
+      b1  += dD_dphi * r;
+      b2  += dD_dlam * r;
+    }
+    const det = A11 * A22 - A12 * A12;
+    if (Math.abs(det) < 1e-15) break;
+    const dphi = ( A22 * b1 - A12 * b2) / det;
+    const dlam = (-A12 * b1 + A11 * b2) / det;
+    phi += dphi;
+    lam += dlam;
+    // Keep phi in [-π/2, π/2]
+    if (phi > Math.PI/2) phi = Math.PI/2;
+    if (phi < -Math.PI/2) phi = -Math.PI/2;
+    if (Math.abs(dphi) + Math.abs(dlam) < 1e-9) break;
+  }
+  // Compute final RMS residual
+  let sumSq = 0;
+  for (const obs of observations) {
+    const phig = obs.gp.lat * D2R, lamg = obs.gp.lon * D2R;
+    const cosD = Math.sin(phi)*Math.sin(phig) + Math.cos(phi)*Math.cos(phig)*Math.cos(lam-lamg);
+    const D_ = Math.acos(Math.max(-1, Math.min(1, cosD)));
+    sumSq += (obs.c * D2R - D_) ** 2;
+  }
+  const rmsRad = Math.sqrt(sumSq / observations.length);
+  let lonDeg = lam * R2D;
+  while (lonDeg > 180) lonDeg -= 360;
+  while (lonDeg < -180) lonDeg += 360;
+  return {
+    lat: phi * R2D,
+    lon: lonDeg,
+    residualArcmin: rmsRad * R2D * 60
+  };
+}
+
+// ============================================================
+// SKY CHART — visible sky from observer location
+//
+// Pipeline per star, executed every redraw:
+//   1) Apply proper motion: catalog J1991.25 → current epoch
+//        RA' = RA + pmRA · dt / cos(Dec)        (mas → rad)
+//        Dec' = Dec + pmDec · dt
+//   2) Apply IAU 2006 precession (J2000 → date) using zeta_A, z_A, theta_A
+//      rotation matrix. We compute a single 3x3 matrix per redraw and
+//      multiply by every star's unit vector.
+//   3) Convert equatorial-of-date (RA, Dec) → horizontal (alt, az):
+//        H = GMST + lon_observer − RA
+//        sin(alt) = sin(φ)·sin(δ) + cos(φ)·cos(δ)·cos(H)
+//        cos(az) = (sin(δ) − sin(alt)·sin(φ)) / (cos(alt)·cos(φ))
+//        sin(az) = −sin(H)·cos(δ) / cos(alt)
+//   4) Stereographic projection from zenith:
+//        z_dist = tan((90° − alt) / 2) → radial distance, scaled to canvas
+//        screen_x = R_chart · z_dist · sin(az)   (azimuth east of north)
+//        screen_y = -R_chart · z_dist · cos(az)
+//
+// Stars below horizon (alt < 0) are skipped. Magnitude scales radius:
+//   r_px = max(0.4, (mag_limit − mag) · 0.55)   (mag_limit ≈ 6.5)
+// ============================================================
+
+// Observer state — updated by clicking the world map.
+let SKY_OBSERVER_LAT = 40.7;
+let SKY_OBSERVER_LON = -74.0;
+
+// Display mode: 'realtime' uses current JD; 'deeptime' animates proper motion.
+let SKY_MODE = 'realtime';
+let SKY_DEEPTIME_OFFSET_YEARS = 0;
+let _skyDirty = true;
+let _skyLastDrawJD = 0;
+
+// Cache for IAU 2006 precession matrix — recomputed only when date changes
+// significantly (1 day granularity is fine — the matrix shifts ~0.014″/day).
+let _precessionMatrix = null;
+let _precessionMatrixJD = -1e9;
+
+// IAU 2006 precession angles (Capitaine, Wallace, Chapront 2003) → matrix.
+// Returns 3x3 rotation that takes a J2000 unit vector to equator-of-date.
+function _computePrecessionMatrix(T) {
+  // T = Julian centuries TT from J2000
+  const arcsec = (1 / 3600) * D2R;
+  // From IAU 2006 — equatorial precession angles in arcseconds
+  const zetaA = (2.650545 + 2306.083227 * T + 0.2988499 * T * T
+                 + 0.01801828 * T * T * T - 5.971e-6 * T * T * T * T) * arcsec;
+  const zA    = (-2.650545 + 2306.077181 * T + 1.0927348 * T * T
+                 + 0.01826837 * T * T * T - 28.596e-6 * T * T * T * T) * arcsec;
+  const thetaA = (2004.191903 * T - 0.4294934 * T * T
+                  - 0.04182264 * T * T * T - 7.089e-6 * T * T * T * T) * arcsec;
+
+  const cz1 = Math.cos(zetaA), sz1 = Math.sin(zetaA);
+  const ct  = Math.cos(thetaA), st = Math.sin(thetaA);
+  const cz2 = Math.cos(zA), sz2 = Math.sin(zA);
+
+  // Rotation = R_z(−zA) · R_y(thetaA) · R_z(−zetaA)
+  // Combined matrix elements (Vallado eq. 3-89, sign-checked):
+  return [
+    cz1 * ct * cz2 - sz1 * sz2,
+    -sz1 * ct * cz2 - cz1 * sz2,
+    -st * cz2,
+    cz1 * ct * sz2 + sz1 * cz2,
+    -sz1 * ct * sz2 + cz1 * cz2,
+    -st * sz2,
+    cz1 * st,
+    -sz1 * st,
+    ct
+  ];
+}
+
+function _getPrecessionMatrix(jdTT) {
+  if (Math.abs(jdTT - _precessionMatrixJD) > 1) {
+    const T = (jdTT - J2000_JD) / 36525;
+    _precessionMatrix = _computePrecessionMatrix(T);
+    _precessionMatrixJD = jdTT;
+  }
+  return _precessionMatrix;
+}
+
+// Periodic precession matrix — for deep-time visualization across multiple
+// precession cycles. The IAU 2006 polynomial above is only accurate within
+// ~±5,000 years of J2000; its higher-order terms blow up beyond that.
+//
+// This model treats precession as a pure rotation around the ecliptic pole
+// at constant rate (360°/25,772 yr), which is the textbook idealization:
+// Earth's axis describes a perfect cone of half-angle ε (the obliquity).
+// This is exact-by-construction periodic, so the trail closes cleanly into
+// a circle that returns to itself every 25,772 years.
+//
+// Built from Rodrigues' rotation formula around the J2000 ecliptic pole
+// (0, −sin ε, cos ε) by angle θ = −2π · dyr / 25,772 (negative because
+// precession is retrograde when viewed from the ecliptic north pole).
+const PRECESSION_PERIOD_YEARS = 25772;
+const _ECLIPTIC_POLE_J2000 = (() => {
+  const eps = 23.4392911 * Math.PI / 180;
+  return [0, -Math.sin(eps), Math.cos(eps)];
+})();
+
+function _periodicPrecessionMatrix(jdTT) {
+  const dyr = (jdTT - J2000_JD) / 365.25;
+  const theta = -2 * Math.PI * dyr / PRECESSION_PERIOD_YEARS;
+  const [ex, ey, ez] = _ECLIPTIC_POLE_J2000;
+  const c = Math.cos(theta), s = Math.sin(theta), oc = 1 - c;
+  // Rodrigues' rotation formula expanded into a 3x3 matrix
+  return [
+    c + ex*ex*oc,        ex*ey*oc - ez*s,    ex*ez*oc + ey*s,
+    ey*ex*oc + ez*s,     c + ey*ey*oc,       ey*ez*oc - ex*s,
+    ez*ex*oc - ey*s,     ez*ey*oc + ex*s,    c + ez*ez*oc
+  ];
+}
+
+// Find the bright star nearest the celestial north pole at jdUT.
+// Searches NAV_STARS (which now includes the historical pole stars
+// Thuban, Kochab, Alderamin, Errai). Returns { name, distDeg, mag }
+// where distDeg is angular separation from the pole.
+//
+// The celestial pole direction in J2000 coords is M^T·(0,0,1) — i.e.,
+// the third row of M (since M takes J2000 → date, so M^T takes date
+// → J2000). A star's angular distance from the pole is then just
+// acos(z_of_date) where z_of_date = M·star_J2000 · z_hat.
+function findCurrentPoleStar(jdUT, useDeepTime = false) {
+  const yearApprox = (jdUT - J2000_JD) / 365.25 + 2000;
+  const dT = deltaT(yearApprox);
+  const jdTT = jdUT + dT / 86400;
+  // Use the periodic model for deep-time so we get stable results across
+  // millennia; otherwise use IAU 2006 for high-precision near-J2000.
+  const M = useDeepTime ? _periodicPrecessionMatrix(jdTT) : _getPrecessionMatrix(jdTT);
+
+  let best = null;
+  for (const s of NAV_STARS) {
+    // Proper motion is tiny for these bright distant stars (<100 mas/yr),
+    // so we ignore it here — pole-star quality is a 0.1° game, not 0.001°.
+    const ra = s.raDeg * D2R;
+    const dec = s.decDeg * D2R;
+    const cd = Math.cos(dec);
+    const x = cd * Math.cos(ra), y = cd * Math.sin(ra), z = Math.sin(dec);
+    const z_date = M[6]*x + M[7]*y + M[8]*z;
+    const distDeg = Math.acos(Math.max(-1, Math.min(1, z_date))) * R2D;
+    if (!best || distDeg < best.distDeg) {
+      best = { name: s.name, distDeg, mag: s.mag, hip: s.hip };
+    }
+  }
+  return best;
+}
+
+// Compute the path the celestial north pole traces over one full
+// precession cycle (~25,772 years). Returns J2000 RA/Dec of the pole
+// sampled densely along the circle. The trail is a perfect circle
+// (radius = obliquity = 23.4°) around the ecliptic pole, by definition
+// of the periodic model.
+//
+// We also tag each sample with the year-offset it corresponds to, so
+// the slider can highlight nearby labels (e.g., "you are near where the
+// pole sat in -2700 BCE").
+let _precessionCircleCache = null;
+function precessionCirclePoints() {
+  if (_precessionCircleCache) return _precessionCircleCache;
+  const points = [];
+  // Sample at ~50-year intervals — gives ~520 points around the circle,
+  // smooth at any zoom level.
+  for (let dyr = 0; dyr < PRECESSION_PERIOD_YEARS; dyr += 50) {
+    const jdTT = J2000_JD + dyr * 365.25;
+    const M = _periodicPrecessionMatrix(jdTT);
+    // Pole in J2000 = third row of M
+    const px = M[6], py = M[7], pz = M[8];
+    const ra = Math.atan2(py, px) * R2D;
+    const dec = Math.asin(pz) * R2D;
+    points.push({ raDeg: ra, decDeg: dec, dyr });
+  }
+  _precessionCircleCache = points;
+  return points;
+}
+
+// For each named star within 8° of the precession circle, find the
+// year-offset at which the pole is closest to that star, plus the
+// closest-approach distance. These get labeled along the trail so the
+// user sees WHICH stars the pole visits over its 26,000-year journey.
+// Returns array of { star, dyr, distDeg, raDeg, decDeg, year } where
+// (raDeg, decDeg) is the pole's position at closest approach (in J2000).
+let _trailLabelsCache = null;
+function precessionTrailLabels() {
+  if (_trailLabelsCache) return _trailLabelsCache;
+  const labels = [];
+  // For each NAV_STAR, find the closest point on the precession circle
+  for (const s of NAV_STARS) {
+    const ra = s.raDeg * D2R, dec = s.decDeg * D2R;
+    const cd = Math.cos(dec);
+    const sx = cd * Math.cos(ra), sy = cd * Math.sin(ra), sz = Math.sin(dec);
+    let bestDot = -2, bestPoint = null;
+    for (const p of precessionCirclePoints()) {
+      const pra = p.raDeg * D2R, pdec = p.decDeg * D2R;
+      const pcd = Math.cos(pdec);
+      const px = pcd * Math.cos(pra), py = pcd * Math.sin(pra), pz = Math.sin(pdec);
+      const dot = sx*px + sy*py + sz*pz;
+      if (dot > bestDot) { bestDot = dot; bestPoint = p; }
+    }
+    const distDeg = Math.acos(Math.max(-1, Math.min(1, bestDot))) * R2D;
+    if (distDeg < 8) {
+      labels.push({
+        star: s.name,
+        mag: s.mag,
+        dyr: bestPoint.dyr,
+        distDeg,
+        raDeg: bestPoint.raDeg,
+        decDeg: bestPoint.decDeg,
+        year: 2000 + bestPoint.dyr
+      });
+    }
+  }
+  // Sort by year for convenient ordering
+  labels.sort((a, b) => a.dyr - b.dyr);
+  _trailLabelsCache = labels;
+  return labels;
+}
+
+// B-V color → CSS color string. Standard MK temperature mapping:
+//   B-V < -0.30  →  hot blue (O type, 30000+ K)
+//   B-V ≈ 0.0    →  white (A type, 10000 K)
+//   B-V ≈ 0.5    →  yellow-white (F, 7000 K)
+//   B-V ≈ 0.65   →  yellow (G — Sun-like, 5800 K)
+//   B-V ≈ 1.0    →  orange (K, 4500 K)
+//   B-V > 1.5    →  red (M, 3500 K)
+// 9 spectral color buckets keyed by B-V index. Returning the bucket
+// INDEX (0-8) lets us reuse pre-rendered halo sprites without restringifying
+// rgb() values per star per frame.
+function _bvBucket(bv) {
+  if (!Number.isFinite(bv)) return 3;
+  if (bv < -0.30) return 0;
+  if (bv < -0.10) return 1;
+  if (bv < 0.10)  return 2;
+  if (bv < 0.30)  return 3;
+  if (bv < 0.55)  return 4;
+  if (bv < 0.80)  return 5;
+  if (bv < 1.10)  return 6;
+  if (bv < 1.50)  return 7;
+  return 8;
+}
+const BV_COLORS = [
+  'rgb(155,176,255)', 'rgb(180,200,255)', 'rgb(220,230,255)',
+  'rgb(245,245,255)', 'rgb(255,250,235)', 'rgb(255,240,200)',
+  'rgb(255,220,170)', 'rgb(255,180,130)', 'rgb(255,140,110)'
+];
+function _bvToColor(bv) { return BV_COLORS[_bvBucket(bv)]; }
+
+// Pre-render halo sprites — once per color bucket, at a fixed canvas
+// size. Each sprite is a soft radial gradient. To draw a halo of any
+// size at runtime, we drawImage() the sprite scaled, which is ~50×
+// faster than createRadialGradient() per star per frame.
+//
+// Without this, drawSkyChart spent ~70% of its budget creating
+// gradient objects for ~100 bright stars on every redraw. With it,
+// scrubbing the deep-time slider stays under 16ms (60 fps).
+const HALO_SPRITE_SIZE = 64;  // pixels; baked at this resolution
+let _haloSprites = null;
+function _getHaloSprites() {
+  if (_haloSprites) return _haloSprites;
+  _haloSprites = BV_COLORS.map(rgb => {
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = HALO_SPRITE_SIZE;
+    const c = cv.getContext('2d');
+    const r = HALO_SPRITE_SIZE / 2;
+    const grd = c.createRadialGradient(r, r, 0, r, r, r);
+    const rgba0 = rgb.replace('rgb', 'rgba').replace(')', ',0.45)');
+    grd.addColorStop(0.00, rgba0);
+    grd.addColorStop(0.40, rgb.replace('rgb', 'rgba').replace(')', ',0.10)'));
+    grd.addColorStop(1.00, 'rgba(0,0,0,0)');
+    c.fillStyle = grd;
+    c.fillRect(0, 0, HALO_SPRITE_SIZE, HALO_SPRITE_SIZE);
+    return cv;
+  });
+  return _haloSprites;
+}
+
+function buildSkyChart() {
+  const canvas = document.getElementById('sky-canvas');
+  if (!canvas) return;
+
+  // Hi-DPI: render at 2x device pixels for crisp dots.
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = 700 * dpr;
+  canvas.height = 700 * dpr;
+  canvas.style.width = '700px';
+  canvas.style.height = '700px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // Mode buttons — toggle live vs deep-time. Live mode hides the deep-time
+  // panel; deep-time shows the slider + preset epochs.
+  const skyCard = document.querySelector('.sky-card');
+  function setMode(mode) {
+    SKY_MODE = mode;
+    if (mode === 'realtime') {
+      SKY_DEEPTIME_OFFSET_YEARS = 0;
+      document.getElementById('sky-deeptime-slider').value = '0';
+      _updateDeepTimePresetActive(0);
+      skyCard.classList.remove('deeptime');
+    } else {
+      skyCard.classList.add('deeptime');
+    }
+    document.getElementById('sky-btn-realtime').classList.toggle('active', mode === 'realtime');
+    document.getElementById('sky-btn-deeptime').classList.toggle('active', mode === 'deeptime');
+    _skyDirty = true;
+    scheduleSkyRedraw();
+  }
+  document.getElementById('sky-btn-realtime').addEventListener('click', () => setMode('realtime'));
+  document.getElementById('sky-btn-deeptime').addEventListener('click', () => setMode('deeptime'));
+
+  // Slider — scrub year offset. Use rAF coalescing so the redraw fires
+  // at most once per vsync (60Hz). Without this, the slider's `input`
+  // event can fire faster than drawSkyChart can complete, causing each
+  // unfinished draw to be visibly clobbered by the next clearRect — the
+  // "glitchy flash" the user was seeing.
+  const slider = document.getElementById('sky-deeptime-slider');
+  slider.addEventListener('input', () => {
+    SKY_DEEPTIME_OFFSET_YEARS = parseInt(slider.value, 10);
+    _updateDeepTimePresetActive(SKY_DEEPTIME_OFFSET_YEARS);
+    scheduleSkyRedraw();
+  });
+
+  // Preset epoch buttons
+  for (const btn of document.querySelectorAll('.sky-preset-btn')) {
+    btn.addEventListener('click', () => {
+      const yr = parseInt(btn.dataset.yr, 10);
+      SKY_DEEPTIME_OFFSET_YEARS = yr;
+      slider.value = String(yr);
+      _updateDeepTimePresetActive(yr);
+      scheduleSkyRedraw();
+    });
+  }
+
+  document.getElementById('sky-btn-realtime').classList.add('active');
+}
+
+// rAF-coalesced redraw. Multiple calls within a single vsync collapse
+// into one drawSkyChart() execution.
+let _skyRedrawScheduled = false;
+function scheduleSkyRedraw() {
+  if (_skyRedrawScheduled) return;
+  _skyRedrawScheduled = true;
+  requestAnimationFrame(() => {
+    _skyRedrawScheduled = false;
+    drawSkyChart();
+  });
+}
+
+// Highlight whichever preset matches the current year offset (or none
+// if the user is scrubbing between presets).
+function _updateDeepTimePresetActive(yr) {
+  for (const btn of document.querySelectorAll('.sky-preset-btn')) {
+    const targetYr = parseInt(btn.dataset.yr, 10);
+    btn.classList.toggle('active', Math.abs(targetYr - yr) < 100);
+  }
+}
+
+function drawSkyChart() {
+  if (typeof STARS === 'undefined' || !astroState) return;
+  const canvas = document.getElementById('sky-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  // Reset transform (in case we scaled before)
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const dpr = window.devicePixelRatio || 1;
+  ctx.scale(dpr, dpr);
+
+  // ---- Time setup ----
+  let jdUT = astroState.jd;
+  if (SKY_MODE === 'deeptime') {
+    jdUT = astroState.jd + SKY_DEEPTIME_OFFSET_YEARS * 365.25;
+  }
+  const yearApprox = (jdUT - J2000_JD) / 365.25 + 2000;
+  const dT = deltaT(yearApprox);
+  const jdTT = jdUT + dT / 86400;
+
+  // ---- Coordinate setup ----
+  // In deep-time mode use the periodic precession model (perfect circular
+  // path, valid across millennia). In live mode use the IAU 2006 polynomial
+  // (high precision near J2000, where we actually live).
+  const M = SKY_MODE === 'deeptime'
+    ? _periodicPrecessionMatrix(jdTT)
+    : _getPrecessionMatrix(jdTT);
+  const dtYears = (jdUT - 2448349.0625) / 365.2425;  // years since J1991.25 (Hipparcos epoch)
+  // CRITICAL: in deep-time mode, LOCK GMST to the live-mode value. Otherwise
+  // the diurnal rotation (~360°/day) absolutely swamps the precession we're
+  // trying to show: a single 25-yr slider step advances GMST by ~110° of sky
+  // rotation while precession advances by only ~0.35°. With GMST locked, the
+  // user sees the sky from the same INSTANT of Earth's rotation, with only
+  // the slow precession + proper motion accumulated over the offset — which
+  // is the actual physics this panel exists to visualize.
+  const gmstRad = (SKY_MODE === 'deeptime' ? gmstDeg(astroState.jd) : gmstDeg(jdUT)) * D2R;
+  const obsLatRad = SKY_OBSERVER_LAT * D2R;
+  const obsLonRad = SKY_OBSERVER_LON * D2R;
+  const sinLat = Math.sin(obsLatRad), cosLat = Math.cos(obsLatRad);
+  const haloSprites = _getHaloSprites();
+
+  // ---- Canvas setup ----
+  const W = 700, H = 700;
+  const CX = W / 2, CY = H / 2;
+  const R = 330;  // chart radius in pixels
+  ctx.clearRect(0, 0, W, H);
+
+  // Horizon ring + cardinal markers
+  ctx.strokeStyle = 'rgba(120, 140, 200, 0.4)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Altitude rings (30°, 60° elevation)
+  ctx.strokeStyle = 'rgba(80, 100, 160, 0.18)';
+  ctx.lineWidth = 0.6;
+  for (const altDeg of [30, 60]) {
+    const r = R * Math.tan((90 - altDeg) * D2R / 2);
+    ctx.beginPath();
+    ctx.arc(CX, CY, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Cardinals — in our convention azimuth is measured east of north, so
+  // North is at the top, East at right (wait — looking up at the sky from
+  // ground, conventional sky charts put North at top and East at LEFT
+  // since you flip the perspective). We use the astronomer convention:
+  // looking up, N=top, E=left, S=bottom, W=right.
+  ctx.font = '600 14px "JetBrains Mono", monospace';
+  ctx.fillStyle = 'rgba(140, 170, 220, 0.85)';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('N', CX, CY - R - 14);
+  ctx.fillText('S', CX, CY + R + 14);
+  ctx.fillText('E', CX - R - 14, CY);
+  ctx.fillText('W', CX + R + 14, CY);
+
+  // ---- Render stars ----
+  // We project to (px, py) per star and store visible ones for later
+  // constellation-line drawing. starScreen[i] = [px, py, mag] or null.
+  const starScreen = new Array(STARS_COUNT);
+  let visibleCount = 0;
+
+  ctx.globalCompositeOperation = 'lighter';  // bright stars overlay nicely
+  for (let i = 0; i < STARS_COUNT; i++) {
+    const off = i * STARS_FLOATS_PER;
+    let raJ2000 = STARS[off];
+    let decJ2000 = STARS[off + 1];
+    const pmRA = STARS[off + 2];   // mas/yr (in cos(dec)·dRA convention)
+    const pmDec = STARS[off + 3];
+    const mag = STARS[off + 4];
+    const bv = STARS[off + 5];
+
+    // 1) Proper motion (small angles — mas → rad)
+    const masToRad = D2R / 3600000;
+    const cosDec = Math.cos(decJ2000);
+    const ra1 = raJ2000 + (cosDec > 1e-6 ? (pmRA / cosDec) * dtYears * masToRad : 0);
+    const dec1 = decJ2000 + pmDec * dtYears * masToRad;
+
+    // 2) Precession via rotation matrix on unit vector
+    const cosD = Math.cos(dec1);
+    const x0 = cosD * Math.cos(ra1);
+    const y0 = cosD * Math.sin(ra1);
+    const z0 = Math.sin(dec1);
+    const x1 = M[0] * x0 + M[1] * y0 + M[2] * z0;
+    const y1 = M[3] * x0 + M[4] * y0 + M[5] * z0;
+    const z1 = M[6] * x0 + M[7] * y0 + M[8] * z0;
+    const ra = Math.atan2(y1, x1);
+    const dec = Math.asin(z1);
+    const sinDec = z1, cosDec2 = Math.sqrt(x1 * x1 + y1 * y1);
+
+    // 3) Equatorial → horizontal
+    const H_rad = gmstRad + obsLonRad - ra;
+    const cosH = Math.cos(H_rad), sinH = Math.sin(H_rad);
+    const sinAlt = sinLat * sinDec + cosLat * cosDec2 * cosH;
+    if (sinAlt <= -0.0035) {     // skip stars > 12 arcmin below horizon
+      starScreen[i] = null;
+      continue;
+    }
+    const alt = Math.asin(Math.max(-1, Math.min(1, sinAlt)));
+    const cosAlt = Math.cos(alt);
+    const sinAz = -sinH * cosDec2 / Math.max(cosAlt, 1e-6);
+    const cosAz = (sinDec - sinAlt * sinLat) / Math.max(cosAlt * cosLat, 1e-6);
+    const az = Math.atan2(sinAz, cosAz);  // measured east of north
+
+    // 4) Stereographic projection from zenith
+    const r = R * Math.tan((Math.PI / 2 - alt) / 2);
+    // Astronomer convention: looking up, North=top, East=LEFT.
+    const px = CX - r * Math.sin(az);
+    const py = CY - r * Math.cos(az);
+
+    // Magnitude → dot size
+    const radius = Math.max(0.35, (6.5 - mag) * 0.55);
+    const alpha = Math.max(0.25, Math.min(1.0, (6.5 - mag) / 5));
+
+    // Glow for brightest stars (mag < 2.5) — blit a pre-rendered halo
+    // sprite at the right size. Massively faster than creating a fresh
+    // radial gradient on every frame.
+    const bucket = _bvBucket(bv);
+    if (mag < 2.5) {
+      const haloR = radius * 4.5;
+      const sprite = haloSprites[bucket];
+      ctx.drawImage(sprite, px - haloR, py - haloR, haloR * 2, haloR * 2);
+    }
+
+    ctx.fillStyle = BV_COLORS[bucket];
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(px, py, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    starScreen[i] = [px, py, mag];
+    visibleCount++;
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+
+  // ---- Precession circle (deep-time only) ----
+  // In deep-time mode, draw a faint dashed trail tracing where the
+  // celestial pole has been / will be over one full precession cycle
+  // (~25,772 years). Mark the pole position at the current epoch with
+  // a small crosshair so the user can see which star the pole is near.
+  if (SKY_MODE === 'deeptime') {
+    const trail = precessionCirclePoints();
+    // Helper: equatorial-of-date (ra_rad, dec_rad) → screen pixel (px, py)
+    // Returns null if below horizon.
+    function eqToScreen(raRad, decRad) {
+      const cdec = Math.cos(decRad), sdec = Math.sin(decRad);
+      const H_rad = gmstRad + obsLonRad - raRad;
+      const cH = Math.cos(H_rad), sH = Math.sin(H_rad);
+      const sinAlt = sinLat * sdec + cosLat * cdec * cH;
+      if (sinAlt <= 0) return null;
+      const alt = Math.asin(sinAlt);
+      const cosA = Math.cos(alt);
+      const sinAz = -sH * cdec / cosA;
+      const cosAz = (sdec - sinAlt * sinLat) / Math.max(cosA * cosLat, 1e-6);
+      const azv = Math.atan2(sinAz, cosAz);
+      const rr = R * Math.tan((Math.PI / 2 - alt) / 2);
+      return [CX - rr * Math.sin(azv), CY - rr * Math.cos(azv)];
+    }
+    // Apply current epoch's M to each J2000 trail point to get its
+    // equatorial-of-date direction at the chosen epoch.
+    ctx.strokeStyle = 'rgba(255, 215, 100, 0.28)';
+    ctx.lineWidth = 1.0;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath();
+    let prevScreen = null;
+    for (const p of trail) {
+      const ra = p.raDeg * D2R, dec = p.decDeg * D2R;
+      const cdJ = Math.cos(dec);
+      const xJ = cdJ * Math.cos(ra), yJ = cdJ * Math.sin(ra), zJ = Math.sin(dec);
+      const xD = M[0]*xJ + M[1]*yJ + M[2]*zJ;
+      const yD = M[3]*xJ + M[4]*yJ + M[5]*zJ;
+      const zD = M[6]*xJ + M[7]*yJ + M[8]*zJ;
+      const raD = Math.atan2(yD, xD);
+      const decD = Math.asin(zD);
+      const scr = eqToScreen(raD, decD);
+      if (scr && prevScreen) {
+        ctx.moveTo(prevScreen[0], prevScreen[1]);
+        ctx.lineTo(scr[0], scr[1]);
+      }
+      prevScreen = scr;
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label named stars at their closest-approach point on the trail.
+    // These are the actual "historical pole stars" — the visible markers
+    // anchor the abstract precession circle to real, recognizable stars.
+    const labels = precessionTrailLabels();
+    ctx.font = '500 9px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    for (const lab of labels) {
+      const ra = lab.raDeg * D2R, dec = lab.decDeg * D2R;
+      const cdJ = Math.cos(dec);
+      const xJ = cdJ * Math.cos(ra), yJ = cdJ * Math.sin(ra), zJ = Math.sin(dec);
+      const xD = M[0]*xJ + M[1]*yJ + M[2]*zJ;
+      const yD = M[3]*xJ + M[4]*yJ + M[5]*zJ;
+      const zD = M[6]*xJ + M[7]*yJ + M[8]*zJ;
+      const scr = eqToScreen(Math.atan2(yD, xD), Math.asin(zD));
+      if (!scr) continue;
+      // Highlight the label nearest the current slider position
+      const isActive = Math.abs(lab.dyr - SKY_DEEPTIME_OFFSET_YEARS) < 1500;
+      ctx.fillStyle = isActive ? 'rgba(255, 215, 100, 0.95)' : 'rgba(220, 180, 140, 0.55)';
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(scr[0], scr[1], isActive ? 3 : 2, 0, Math.PI * 2);
+      ctx.fill();
+      // Label with star name; stroke-then-fill gives a readable outline
+      const txt = lab.star;
+      ctx.strokeText(txt, scr[0] + 5, scr[1] + 3);
+      ctx.fillText(txt, scr[0] + 5, scr[1] + 3);
+    }
+
+    // Mark the CURRENT epoch's pole position (where Earth's axis points
+    // right now in the displayed sky). It's always at RA, Dec = (any, +90°)
+    // in equator-of-date — i.e., we map dec=+90° directly.
+    const poleScreen = eqToScreen(0, Math.PI / 2);
+    if (poleScreen) {
+      ctx.strokeStyle = 'rgba(255, 215, 100, 0.85)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(poleScreen[0], poleScreen[1], 8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(poleScreen[0] - 14, poleScreen[1]);
+      ctx.lineTo(poleScreen[0] - 9, poleScreen[1]);
+      ctx.moveTo(poleScreen[0] + 9, poleScreen[1]);
+      ctx.lineTo(poleScreen[0] + 14, poleScreen[1]);
+      ctx.moveTo(poleScreen[0], poleScreen[1] - 14);
+      ctx.lineTo(poleScreen[0], poleScreen[1] - 9);
+      ctx.moveTo(poleScreen[0], poleScreen[1] + 9);
+      ctx.lineTo(poleScreen[0], poleScreen[1] + 14);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(255, 215, 100, 0.9)';
+      ctx.font = '500 10px "JetBrains Mono", monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText('celestial pole', poleScreen[0] + 16, poleScreen[1] + 3);
+    }
+  }
+
+  // ---- Constellation lines ----
+  if (typeof CONSTELLATION_LINES !== 'undefined') {
+    ctx.strokeStyle = 'rgba(120, 160, 220, 0.18)';
+    ctx.lineWidth = 0.6;
+    ctx.beginPath();
+    for (let i = 0; i < CONSTELLATION_LINES.length; i += 2) {
+      const a = CONSTELLATION_LINES[i];
+      const b = CONSTELLATION_LINES[i + 1];
+      const sa = starScreen[a], sb = starScreen[b];
+      if (!sa || !sb) continue;
+      // Skip lines that cross the horizon (one star below it)
+      ctx.moveTo(sa[0], sa[1]);
+      ctx.lineTo(sb[0], sb[1]);
+    }
+    ctx.stroke();
+  }
+
+  // ---- Sun + Moon + planets in the sky ----
+  // Add solar system bodies as labeled markers if they're above the horizon.
+  // Reuse precomputed astroState heliocentric positions.
+  function plotBody(raRad, decRad, label, color, sizePx) {
+    const H_rad = gmstRad + obsLonRad - raRad;
+    const cosH = Math.cos(H_rad), sinH = Math.sin(H_rad);
+    const sd = Math.sin(decRad), cd = Math.cos(decRad);
+    const sinAlt = sinLat * sd + cosLat * cd * cosH;
+    if (sinAlt <= 0) return;
+    const alt = Math.asin(sinAlt);
+    const sinAz = -sinH * cd / Math.cos(alt);
+    const cosAz = (sd - sinAlt * sinLat) / Math.max(Math.cos(alt) * cosLat, 1e-6);
+    const az = Math.atan2(sinAz, cosAz);
+    const r = R * Math.tan((Math.PI / 2 - alt) / 2);
+    const px = CX - r * Math.sin(az);
+    const py = CY - r * Math.cos(az);
+    // Glow + body
+    const halo = ctx.createRadialGradient(px, py, 0, px, py, sizePx * 4);
+    halo.addColorStop(0, color);
+    halo.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath(); ctx.arc(px, py, sizePx * 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(px, py, sizePx, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(220, 230, 255, 0.85)';
+    ctx.font = '500 10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, px, py + sizePx + 11);
+  }
+
+  // Sun: derive RA/Dec from astroState.sun (geocentric ecliptic)
+  // Already have sunPosition giving ecliptic; convert here using meanObliquity ~23.4
+  const obl = (23.4392911 - 0.0130042 * (jdTT - J2000_JD) / 36525) * D2R;
+  if (astroState.sun) {
+    const sunLon = astroState.sun.lon * D2R;
+    const sunRA = Math.atan2(Math.sin(sunLon) * Math.cos(obl), Math.cos(sunLon));
+    const sunDec = Math.asin(Math.sin(sunLon) * Math.sin(obl));
+    plotBody(sunRA, sunDec, '☉ Sun', 'rgba(255,220,140,0.9)', 5);
+  }
+  if (astroState.moon) {
+    const m = astroState.moon;
+    const mLon = m.lon * D2R, mLat = m.lat * D2R;
+    const sinDec = Math.sin(mLat) * Math.cos(obl) + Math.cos(mLat) * Math.sin(obl) * Math.sin(mLon);
+    const moonDec = Math.asin(sinDec);
+    const moonRA = Math.atan2(
+      Math.sin(mLon) * Math.cos(obl) - Math.tan(mLat) * Math.sin(obl),
+      Math.cos(mLon)
+    );
+    plotBody(moonRA, moonDec, '☽ Moon', 'rgba(220,220,220,0.9)', 4);
+  }
+  // Planets: use geocentric vector from heliocentric positions
+  if (astroState.planets) {
+    const earth = astroState.planets.earth;
+    const PLANET_LIGHTS = {
+      mercury: { c: 'rgba(180,180,180,0.8)', s: 2, n: '☿' },
+      venus:   { c: 'rgba(255,250,210,0.95)', s: 3.5, n: '♀' },
+      mars:    { c: 'rgba(220,120,90,0.9)', s: 2.5, n: '♂' },
+      jupiter: { c: 'rgba(220,180,140,0.95)', s: 3.5, n: '♃' },
+      saturn:  { c: 'rgba(220,200,160,0.9)', s: 3, n: '♄' }
+    };
+    for (const [key, pl] of Object.entries(PLANET_LIGHTS)) {
+      const p = astroState.planets[key];
+      if (!p || !earth) continue;
+      const gx = p.x - earth.x, gy = p.y - earth.y, gz = p.z - earth.z;
+      const gLon = Math.atan2(gy, gx);
+      const gLat = Math.atan2(gz, Math.sqrt(gx * gx + gy * gy));
+      const sd = Math.sin(gLat) * Math.cos(obl) + Math.cos(gLat) * Math.sin(obl) * Math.sin(gLon);
+      const planetDec = Math.asin(sd);
+      const planetRA = Math.atan2(
+        Math.sin(gLon) * Math.cos(obl) - Math.tan(gLat) * Math.sin(obl),
+        Math.cos(gLon)
+      );
+      plotBody(planetRA, planetDec, pl.n, pl.c, pl.s);
+    }
+  }
+
+  // ---- Status readouts ----
+  document.getElementById('sky-readout').textContent =
+    `${STARS_COUNT.toLocaleString()} catalog · ${visibleCount.toLocaleString()} above horizon`;
+  const obsNS = SKY_OBSERVER_LAT >= 0 ? 'N' : 'S';
+  const obsEW = SKY_OBSERVER_LON >= 0 ? 'E' : 'W';
+  document.getElementById('sky-observer-label').textContent =
+    `${Math.abs(SKY_OBSERVER_LAT).toFixed(2)}°${obsNS}, ${Math.abs(SKY_OBSERVER_LON).toFixed(2)}°${obsEW}`;
+  const cal = jdToCalendar(jdUT);
+  const timeStr = `${cal.year}-${String(cal.month).padStart(2,'0')}-${String(cal.day).padStart(2,'0')} ` +
+                  `${String(cal.hour).padStart(2,'0')}:${String(cal.minute).padStart(2,'0')} UT`;
+  document.getElementById('sky-time-info').textContent = timeStr;
+
+  // Deep-time scrubber readouts — year, delta, and current pole star.
+  if (SKY_MODE === 'deeptime') {
+    const yr = cal.year;
+    const dyr = SKY_DEEPTIME_OFFSET_YEARS;
+    const yrLabel = yr > 0 ? `year ${yr} CE` : `year ${Math.abs(yr) + 1} BCE`;
+    const deltaLabel = dyr === 0 ? 'now'
+      : dyr > 0 ? `${dyr.toLocaleString()} years from now`
+      : `${Math.abs(dyr).toLocaleString()} years ago`;
+    document.getElementById('sky-deeptime-readout').innerHTML =
+      `${yrLabel}  <span class="delta">·  ${deltaLabel}</span>`;
+
+    const pole = findCurrentPoleStar(jdUT, true);
+    if (pole) {
+      const quality = pole.distDeg < 1 ? 'excellent' :
+                      pole.distDeg < 3 ? 'good' :
+                      pole.distDeg < 6 ? 'rough' : 'no useful pole star';
+      document.getElementById('sky-deeptime-pole').textContent =
+        `pole star: ${pole.name} (mag ${pole.mag.toFixed(1)}) · ${pole.distDeg.toFixed(2)}° from true pole · ${quality}`;
+    }
+  }
+
+  _skyLastDrawJD = jdUT;
+}
+
 // Click handler on world map
 function setupMapClick() {
   const svg = document.getElementById('world-map');
@@ -3268,8 +6211,14 @@ function setupMapClick() {
     // Convert pixel → geographic
     const lon = (svgX / MAP_W) * 360 - 180;
     const lat = 90 - (svgY / MAP_H) * 180;
-    
+
     if (!astroState) return;
+
+    // Update sky chart observer
+    SKY_OBSERVER_LAT = lat;
+    SKY_OBSERVER_LON = lon;
+    _skyDirty = true;
+    drawSkyChart();
     
     const result = computeSunriseSunset(lat, lon, astroState.jd);
     const ns = lat >= 0 ? 'N' : 'S';
@@ -3294,7 +6243,22 @@ function setupMapClick() {
       html += `<div>daylight: ${result.daylightHours.toFixed(1)} hours</div>`;
     }
     html += `<div style="color:#555;margin-top:0.3rem">solar dec: ${result.dec.toFixed(2)}°</div>`;
-    
+
+    // IGRF magnetic field info
+    if (typeof IGRF_G !== 'undefined') {
+      const yearApprox = (astroState.jd - J2000_JD) / 365.25 + 2000;
+      const mag = igrfFieldAt(lat, lon, 0, yearApprox);
+      if (mag) {
+        const declStr = fmtDeclination(mag.D);
+        const inclStr = `${mag.I.toFixed(1)}°`;
+        const fStr = `${(mag.F / 1000).toFixed(1)} μT`;
+        html += `<div class="tooltip-section-title">geomagnetic field (IGRF-13)</div>`;
+        html += `<div>declination: <b>${declStr}</b></div>`;
+        html += `<div>inclination: ${inclStr} ${mag.I >= 0 ? '↓' : '↑'}</div>`;
+        html += `<div>field strength: ${fStr}</div>`;
+      }
+    }
+
     // Position tooltip near the click
     const tooltipX = e.clientX - rect.left + 12;
     const tooltipY = e.clientY - rect.top - 10;
@@ -3313,13 +6277,449 @@ function setupMapClick() {
   });
 }
 
+// ============================================================
+// CELESTIAL NAVIGATION — UI panel + map overlay
+// ============================================================
+
+// Each observation: { id, body, jd, ho, gp:{lat,lon}, c, color }
+const _celnavObs = [];
+let _celnavObsCounter = 0;
+let _celnavCopGroup = null;
+let _celnavFixGroup = null;
+
+// Distinct colors for CoP arcs — high contrast against the map
+const CELNAV_COLORS = [
+  '#ff6b6b', '#ffa94d', '#ffd43b', '#9ade5e',
+  '#4dd6c5', '#5eb1ff', '#b78bff', '#ff7ad9'
+];
+
+// Convert "now" or "YYYY-MM-DD HH:MM:SS" → JD (UT)
+function _celnavParseTime(str) {
+  if (!str || str.trim() === '' || str.toLowerCase() === 'now') {
+    return astroState ? astroState.jd : null;
+  }
+  // Accept "YYYY-MM-DD HH:MM:SS" or ISO. Treat as UTC.
+  const m = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}(?:\.\d+)?))?$/);
+  if (!m) return null;
+  const [, Y, M, D, h, mn, s] = m;
+  return jdFromCalendar(+Y, +M, +D, +h, +mn, parseFloat(s || '0'));
+}
+
+function _celnavFormatTime(jd) {
+  const c = jdToCalendar(jd);
+  return `${c.year}-${String(c.month).padStart(2,'0')}-${String(c.day).padStart(2,'0')} ` +
+         `${String(c.hour).padStart(2,'0')}:${String(c.minute).padStart(2,'0')}:${String(Math.floor(c.second||0)).padStart(2,'0')}`;
+}
+
+function _celnavBodyLabel(body) {
+  return body.charAt(0).toUpperCase() + body.slice(1);
+}
+
+function buildCelnavPanel() {
+  // Populate stars optgroup
+  const og = document.getElementById('celnav-stars-optgroup');
+  if (og) {
+    for (const s of NAV_STARS) {
+      const opt = document.createElement('option');
+      opt.value = 'star:' + s.name.toLowerCase();
+      opt.textContent = `${s.name}  (mag ${s.mag.toFixed(1)})`;
+      og.appendChild(opt);
+    }
+  }
+
+  // Map overlay groups (drawn last so they sit on top of land/terminator)
+  const svg = document.getElementById('world-map');
+  if (svg) {
+    _celnavCopGroup = svgEl('g', { class: 'celnav-cop-group' });
+    svg.appendChild(_celnavCopGroup);
+    _celnavFixGroup = svgEl('g', { class: 'celnav-fix-group' });
+    svg.appendChild(_celnavFixGroup);
+  }
+
+  // Wire up controls
+  document.getElementById('celnav-add').addEventListener('click', _celnavAddCurrent);
+  document.getElementById('celnav-sample').addEventListener('click', _celnavLoadSample);
+  document.getElementById('celnav-clear').addEventListener('click', _celnavClearAll);
+  document.getElementById('celnav-corrections-toggle').addEventListener('click', () => {
+    const blk = document.getElementById('celnav-corrections-block');
+    const tog = document.getElementById('celnav-corrections-toggle');
+    blk.classList.toggle('collapsed');
+    tog.textContent = blk.classList.contains('collapsed')
+      ? '▸ sextant corrections (Hs → Ho)'
+      : '▾ sextant corrections (Hs → Ho)';
+  });
+  document.getElementById('celnav-apply-corrections').addEventListener('click', () => {
+    const hs = parseFloat(document.getElementById('celnav-hs').value);
+    if (!Number.isFinite(hs)) return;
+    const bodySel = document.getElementById('celnav-body').value;
+    const body = bodySel.startsWith('star:') ? 'star' : bodySel;
+    const ho = applySextantCorrections(hs, body, {
+      indexCorrection: parseFloat(document.getElementById('celnav-ic').value) || 0,
+      heightOfEyeM: parseFloat(document.getElementById('celnav-heye').value) || 0,
+      limb: document.getElementById('celnav-limb').value
+    });
+    if (Number.isFinite(ho)) {
+      document.getElementById('celnav-ho').value = ho.toFixed(4);
+    }
+  });
+}
+
+function _celnavAddCurrent() {
+  const bodySel = document.getElementById('celnav-body').value;
+  const ho = parseFloat(document.getElementById('celnav-ho').value);
+  const timeStr = document.getElementById('celnav-time').value.trim();
+
+  if (!Number.isFinite(ho)) {
+    alert('enter an observed altitude (Ho) in degrees');
+    return;
+  }
+
+  const jd = _celnavParseTime(timeStr);
+  if (!jd) {
+    alert('time format: "now" or "YYYY-MM-DD HH:MM:SS" UT');
+    return;
+  }
+
+  const bodyKey = bodySel.startsWith('star:') ? bodySel.slice(5) : bodySel;
+  const gp = bodyGP(bodyKey, jd);
+  if (!gp) {
+    alert('could not compute geographic position for ' + bodyKey);
+    return;
+  }
+
+  const obs = {
+    id: ++_celnavObsCounter,
+    body: bodyKey,
+    bodyDisplay: bodySel.startsWith('star:')
+      ? NAV_STARS.find(s => s.name.toLowerCase() === bodyKey).name
+      : _celnavBodyLabel(bodyKey),
+    jd, ho, gp,
+    c: 90 - ho,                                      // angular radius of CoP (deg)
+    color: CELNAV_COLORS[(_celnavObs.length) % CELNAV_COLORS.length]
+  };
+  _celnavObs.push(obs);
+  _celnavRender();
+
+  // Clear Ho but keep body and time for fast successive entry
+  document.getElementById('celnav-ho').value = '';
+}
+
+function _celnavRemove(id) {
+  const i = _celnavObs.findIndex(o => o.id === id);
+  if (i >= 0) _celnavObs.splice(i, 1);
+  _celnavRender();
+}
+
+function _celnavClearAll() {
+  _celnavObs.length = 0;
+  document.getElementById('celnav-dr-lat').value = '';
+  document.getElementById('celnav-dr-lon').value = '';
+  _celnavRender();
+}
+
+// Render the observation list, the CoPs on the map, and the fix.
+function _celnavRender() {
+  const list = document.getElementById('celnav-list');
+  list.innerHTML = '';
+
+  if (_celnavObs.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'celnav-list-empty';
+    empty.textContent = 'no observations yet — add one above, or load the sample fix';
+    list.appendChild(empty);
+  } else {
+    for (const o of _celnavObs) {
+      const row = document.createElement('div');
+      row.className = 'celnav-row';
+      const ns = o.gp.lat >= 0 ? 'N' : 'S';
+      const ew = o.gp.lon >= 0 ? 'E' : 'W';
+      row.innerHTML = `
+        <div class="celnav-swatch" style="background:${o.color}"></div>
+        <div>
+          <div class="celnav-row-body">${o.bodyDisplay}</div>
+          <div class="celnav-row-time">${_celnavFormatTime(o.jd)} UT</div>
+        </div>
+        <div class="celnav-row-info">
+          Ho=${o.ho.toFixed(4)}°<br/>
+          GP ${Math.abs(o.gp.lat).toFixed(2)}°${ns}, ${Math.abs(o.gp.lon).toFixed(2)}°${ew}
+        </div>
+        <button class="celnav-row-remove" data-id="${o.id}" title="remove">×</button>
+      `;
+      list.appendChild(row);
+      row.querySelector('.celnav-row-remove').addEventListener('click', () => _celnavRemove(o.id));
+    }
+  }
+
+  _celnavRedrawMap();
+  _celnavComputeFix();
+}
+
+// Draw circles of position on the world map. Splits polylines at the
+// dateline so the equirectangular wrap doesn't draw long horizontal lines.
+function _celnavRedrawMap() {
+  if (!_celnavCopGroup) return;
+  _celnavCopGroup.innerHTML = '';
+
+  for (const o of _celnavObs) {
+    const pts = circleOfPositionPoints(o.gp, o.c, 180);
+    // Convert to (x,y) and split at dateline crossings
+    const segments = [[]];
+    let prevLon = null;
+    for (const [lat, lon] of pts) {
+      if (prevLon !== null && Math.abs(lon - prevLon) > 180) {
+        segments.push([]);
+      }
+      segments[segments.length - 1].push([lonToX(lon), latToY(lat)]);
+      prevLon = lon;
+    }
+    for (const seg of segments) {
+      if (seg.length < 2) continue;
+      const d = seg.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+      _celnavCopGroup.appendChild(svgEl('path', {
+        class: 'celnav-cop-line',
+        d, stroke: o.color, opacity: '0.85'
+      }));
+    }
+    // GP marker (small dot at the body's geographic position)
+    const gpx = lonToX(o.gp.lon), gpy = latToY(o.gp.lat);
+    _celnavCopGroup.appendChild(svgEl('circle', {
+      class: 'celnav-cop-gp',
+      cx: gpx, cy: gpy, r: 4, fill: o.color, stroke: '#fff', 'stroke-width': '1.2', opacity: '0.9'
+    }));
+    // Body label next to GP
+    const lbl = svgEl('text', {
+      class: 'celnav-cop-gp',
+      x: gpx + 7, y: gpy + 3,
+      'font-size': '11', 'font-weight': '500',
+      fill: o.color, stroke: 'rgba(0,0,0,0.7)', 'stroke-width': '3', 'paint-order': 'stroke'
+    });
+    lbl.textContent = o.bodyDisplay;
+    _celnavCopGroup.appendChild(lbl);
+  }
+}
+
+// Compute the fix and render the result block + map markers.
+function _celnavComputeFix() {
+  const out = document.getElementById('celnav-fix');
+  if (_celnavFixGroup) _celnavFixGroup.innerHTML = '';
+
+  if (_celnavObs.length < 2) {
+    out.className = 'celnav-fix-result empty';
+    out.innerHTML = `<div class="celnav-fix-result-title">computed fix</div>
+      <div style="color:#666">add at least 2 observations</div>`;
+    return;
+  }
+
+  const drLat = parseFloat(document.getElementById('celnav-dr-lat').value);
+  const drLon = parseFloat(document.getElementById('celnav-dr-lon').value);
+  const haveDR = Number.isFinite(drLat) && Number.isFinite(drLon);
+
+  // Get a starting position. For exactly 2 obs, use closed-form intersection.
+  // For 3+, use 2 of them to seed and refine via least squares.
+  const o1 = _celnavObs[0], o2 = _celnavObs[1];
+  const intersections = intersectCoPs(o1.gp, o1.c, o2.gp, o2.c,
+    haveDR ? drLat : undefined, haveDR ? drLon : undefined);
+
+  if (!intersections) {
+    out.className = 'celnav-fix-result';
+    out.innerHTML = `<div class="celnav-fix-result-title">computed fix</div>
+      <div style="color:#ff8866">circles do not intersect — check your altitudes / GPs</div>`;
+    return;
+  }
+
+  const [primary, ambig] = intersections;
+  let fix = primary;
+  if (_celnavObs.length >= 3) {
+    // Refine via least squares using all observations
+    const refined = celestialFix(_celnavObs, primary.lat, primary.lon);
+    if (refined) fix = refined;
+  } else if (haveDR) {
+    // For 2-obs + DR, also do a small refinement around the DR-closer intersection
+    const refined = celestialFix(_celnavObs, primary.lat, primary.lon, 5);
+    if (refined) fix = refined;
+  }
+
+  const ns = fix.lat >= 0 ? 'N' : 'S';
+  const ew = fix.lon >= 0 ? 'E' : 'W';
+  const latDeg = Math.abs(fix.lat);
+  const lonDeg = Math.abs(fix.lon);
+  const latArcmin = (latDeg - Math.floor(latDeg)) * 60;
+  const lonArcmin = (lonDeg - Math.floor(lonDeg)) * 60;
+  const residualStr = fix.residualArcmin !== undefined
+    ? `${fix.residualArcmin.toFixed(2)}'  (≈ ${(fix.residualArcmin * 1.852).toFixed(2)} km on ground)`
+    : 'closed-form 2-circle solution';
+
+  out.className = 'celnav-fix-result';
+  out.innerHTML = `
+    <div class="celnav-fix-result-title">computed fix · ${_celnavObs.length} observation${_celnavObs.length>1?'s':''}</div>
+    <div class="celnav-fix-coord">${Math.floor(latDeg)}°${latArcmin.toFixed(2)}'${ns} &nbsp; ${Math.floor(lonDeg)}°${lonArcmin.toFixed(2)}'${ew}</div>
+    <div class="celnav-fix-residual">decimal: ${fix.lat.toFixed(5)}°, ${fix.lon.toFixed(5)}°</div>
+    <div class="celnav-fix-residual">RMS residual: ${residualStr}</div>
+    ${ambig && _celnavObs.length === 2 && !haveDR ? `<div class="celnav-fix-residual" style="color:#ff8866">2-obs ambiguity: also at ${ambig.lat.toFixed(2)}°, ${ambig.lon.toFixed(2)}° (enter DR to disambiguate)</div>` : ''}
+  `;
+
+  // Draw fix marker on map
+  if (_celnavFixGroup) {
+    const fx = lonToX(fix.lon), fy = latToY(fix.lat);
+    _celnavFixGroup.appendChild(svgEl('circle', {
+      class: 'celnav-fix-marker', cx: fx, cy: fy, r: 7
+    }));
+    _celnavFixGroup.appendChild(svgEl('line', {
+      class: 'celnav-fix-marker-cross', x1: fx - 14, y1: fy, x2: fx + 14, y2: fy
+    }));
+    _celnavFixGroup.appendChild(svgEl('line', {
+      class: 'celnav-fix-marker-cross', x1: fx, y1: fy - 14, x2: fx, y2: fy + 14
+    }));
+    const lbl = svgEl('text', {
+      x: fx + 12, y: fy - 12,
+      'font-size': '14', 'font-weight': '700', fill: '#ffcc44',
+      stroke: 'rgba(0,0,0,0.8)', 'stroke-width': '4', 'paint-order': 'stroke'
+    });
+    lbl.textContent = '✦ FIX';
+    _celnavFixGroup.appendChild(lbl);
+
+    // Draw ambiguity marker for 2-obs case (if not resolved by DR)
+    if (ambig && _celnavObs.length === 2 && !haveDR) {
+      const ax = lonToX(ambig.lon), ay = latToY(ambig.lat);
+      _celnavFixGroup.appendChild(svgEl('circle', {
+        class: 'celnav-fix-ambig', cx: ax, cy: ay, r: 9
+      }));
+    }
+  }
+}
+
+// Sample fix: fabricate three perfect observations from NYC at the
+// current astroState time. Pick three bodies that are well above
+// horizon and well-separated in azimuth (good geometry → small fix
+// triangle). When the user clicks "Sample fix", these resolve back
+// to NYC, demonstrating the pipeline end-to-end.
+function _celnavLoadSample() {
+  if (!astroState) return;
+  _celnavObs.length = 0;
+
+  // Use NYC as the reference observer
+  const obsLat = 40.7128, obsLon = -74.0060;
+  const obsLatRad = obsLat * D2R, obsLonRad = obsLon * D2R;
+  const sinLat = Math.sin(obsLatRad), cosLat = Math.cos(obsLatRad);
+  const jd = astroState.jd;
+  const gst = gmstDeg(jd);
+
+  // Synthesize observed altitude for a body at jd seen from NYC.
+  function synthAlt(bodyKey) {
+    const gp = bodyGP(bodyKey, jd);
+    if (!gp) return null;
+    // Hour angle = GMST + obs_lon - body_RA  (RA = body's GP longitude + GMST)
+    const bodyRA = gp.lon + gst;
+    const Hdeg = gst + obsLon - bodyRA;
+    const Hrad = Hdeg * D2R;
+    const decRad = gp.dec * D2R;
+    const sinAlt = sinLat * Math.sin(decRad) + cosLat * Math.cos(decRad) * Math.cos(Hrad);
+    return { alt: Math.asin(sinAlt) * R2D, gp };
+  }
+
+  // Find three bodies above horizon with diverse azimuths.
+  const candidates = ['sun', 'moon', 'venus', 'mars', 'jupiter', 'saturn',
+    'star:vega', 'star:sirius', 'star:arcturus', 'star:capella', 'star:procyon',
+    'star:altair', 'star:rigel', 'star:aldebaran', 'star:spica', 'star:polaris',
+    'star:antares', 'star:betelgeuse', 'star:fomalhaut', 'star:deneb', 'star:regulus'];
+  const visible = [];
+  for (const c of candidates) {
+    const key = c.startsWith('star:') ? c.slice(5) : c;
+    const r = synthAlt(key);
+    if (r && r.alt > 15) {  // 15° elevation cutoff (reliable sextant reading)
+      visible.push({ id: c, key, alt: r.alt, gp: r.gp });
+    }
+  }
+  if (visible.length < 3) {
+    alert(`only ${visible.length} bodies above 15° elevation right now — try the sample at a different time, or add observations manually`);
+    return;
+  }
+
+  // Pick first 3 with maximum azimuth diversity.
+  // Compute azimuth for each, then greedily select for spread.
+  for (const v of visible) {
+    const Hdeg = gst + obsLon - (v.gp.lon + gst);
+    const Hrad = Hdeg * D2R;
+    const decRad = v.gp.dec * D2R;
+    const altRad = v.alt * D2R;
+    const sinAz = -Math.sin(Hrad) * Math.cos(decRad) / Math.cos(altRad);
+    const cosAz = (Math.sin(decRad) - Math.sin(altRad) * sinLat)
+                / Math.max(Math.cos(altRad) * cosLat, 1e-6);
+    v.az = (Math.atan2(sinAz, cosAz) * R2D + 360) % 360;
+  }
+  // Greedy diverse selection
+  const picked = [visible[0]];
+  while (picked.length < 3) {
+    let best = null, bestSpread = -1;
+    for (const v of visible) {
+      if (picked.includes(v)) continue;
+      const minDelta = Math.min(...picked.map(p => {
+        const d = Math.abs(((v.az - p.az + 540) % 360) - 180);
+        return 180 - d;
+      }));
+      if (minDelta > bestSpread) { bestSpread = minDelta; best = v; }
+    }
+    if (!best) break;
+    picked.push(best);
+  }
+
+  for (let i = 0; i < picked.length; i++) {
+    const p = picked[i];
+    const display = p.id.startsWith('star:')
+      ? NAV_STARS.find(s => s.name.toLowerCase() === p.key).name
+      : _celnavBodyLabel(p.key);
+    _celnavObs.push({
+      id: ++_celnavObsCounter,
+      body: p.key,
+      bodyDisplay: display,
+      jd, ho: p.alt, gp: p.gp,
+      c: 90 - p.alt,
+      color: CELNAV_COLORS[i]
+    });
+  }
+
+  // Pre-fill DR with NYC
+  document.getElementById('celnav-dr-lat').value = '40.7';
+  document.getElementById('celnav-dr-lon').value = '-74.0';
+  _celnavRender();
+}
+
 // --- BOOT ---
 buildClockFace();
 buildDots();
 buildOrrery();
 buildMoonPhase();
 buildWorldMap();
+buildBarycenterPanel();
+buildCometOrbitTrails();
+buildCometsList();
+if (typeof STARS !== 'undefined') buildSkyChart();
+buildCelnavPanel();
 setupMapClick();
+
+// Build isogonic contours once we have a JD. Use a small delay so
+// the map is interactive before this ~50ms compute kicks in.
+setTimeout(() => {
+  if (typeof IGRF_G !== 'undefined' && astroState) {
+    const yr = (astroState.jd - J2000_JD) / 365.25 + 2000;
+    buildIsogonicContours(yr);
+  }
+}, 200);
+
+// Magnetic overlay toggle
+const magToggle = document.getElementById('magnetic-toggle');
+if (magToggle) {
+  magToggle.addEventListener('click', () => {
+    const map = document.getElementById('world-map');
+    map.classList.toggle('show-magnetic');
+    magToggle.classList.toggle('active');
+    const isOn = map.classList.contains('show-magnetic');
+    magToggle.textContent = isOn ? 'hide declination' : 'show declination';
+    const legendItem = document.querySelector('.legend-magnetic');
+    if (legendItem) legendItem.style.display = isOn ? '' : 'none';
+  });
+}
+
 requestAnimationFrame(render);
 </script>
 </body>
